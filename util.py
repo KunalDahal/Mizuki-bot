@@ -1,0 +1,153 @@
+import os
+from dotenv import load_dotenv
+import json
+import random
+from typing import List
+
+load_dotenv()
+
+JSON_FOLDER = "JSON"
+REPLACE_FILE=os.path.join(JSON_FOLDER, "replace.json")
+REMOVE_FILE=os.path.join(JSON_FOLDER, "remove.json")
+CHANNEL_FILE = os.path.join(JSON_FOLDER, "channel_id.json")
+POST_FILE = os.path.join(JSON_FOLDER, "post_id.json")
+
+def load_remove_words() -> List[str]:
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(JSON_FOLDER, exist_ok=True)
+        
+        # Return empty list if file doesn't exist
+        if not os.path.exists(REMOVE_FILE):
+            return []
+            
+        # Load and return words from file
+        with open(REMOVE_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+            # Support both array format and object with 'words' key
+            if isinstance(data, list):
+                return data
+            return data.get('words', [])
+            
+    except json.JSONDecodeError:
+        # Handle corrupt JSON file
+        print(f"Warning: {REMOVE_FILE} contains invalid JSON")
+        return []
+    except Exception as e:
+        # Log other errors and return empty list
+        print(f"Error loading {REMOVE_FILE}: {e}")
+        return []
+    
+def generate_post_id():
+    return random.randint(10000, 99999)
+
+def save_remove_words(words):
+    os.makedirs(JSON_FOLDER, exist_ok=True)
+    with open(REMOVE_FILE, 'w') as f:
+        json.dump(words, f, indent=2)
+        
+def get_bot_token():
+    token = os.getenv('BOT_TOKEN')
+    if not token:
+        raise ValueError("BOT_TOKEN not found in .env file")
+    return token
+
+
+def load_replace_words():
+    """Load word replacements from JSON file"""
+    try:
+        if not os.path.exists(REPLACE_FILE):
+            return {}
+        
+        with open(REPLACE_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading replace words: {e}")
+        return {}
+
+def save_replace_words(replace_dict):
+    """Save word replacements to JSON file"""
+    try:
+        os.makedirs(JSON_FOLDER, exist_ok=True)
+        with open(REPLACE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(replace_dict, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving replace words: {e}")
+        return False
+
+def get_hf_token():
+    token = os.getenv('HF_TOKEN')
+    if not token:
+        raise ValueError("HF_TOKEN not found in .env file")
+    return token
+
+def get_api_id():
+    return int(os.getenv('API_ID'))
+
+def get_api_hash():
+    return os.getenv('API_HASH')
+
+def get_session_string():
+    session = os.getenv('SESSION_STRING')
+    if not session:
+        raise ValueError("SESSION_STRING not found in .env file")
+    return session
+
+def get_session_name():
+    session = os.getenv('SESSION_NAME')
+    if not session:
+        raise ValueError("SESSION_NAME not found in .env file")
+    return session
+
+def get_bot_username():
+    username = os.getenv('BOT_USERNAME')
+    if not username:
+        raise ValueError("BOT_USERNAME not found in .env file")
+    return username.lstrip('@')
+
+def get_moderation_channel_id():
+    channel_id = os.getenv('MODERATION_CHANNEL_ID')
+    if not channel_id:
+        raise ValueError("MODERATION_CHANNEL_ID not found in .env file")
+    return int(channel_id)
+
+def get_target_channel_id():
+    channel_id = os.getenv('TARGET_ID')
+    if not channel_id:
+        raise ValueError("TARGET_ID not found in .env file")
+    return int(channel_id)
+
+def load_channels():
+    if not os.path.exists(CHANNEL_FILE):
+        return []
+    with open(CHANNEL_FILE, 'r') as f:
+        data = json.load(f)
+    return [int(cid) for cid in data]
+
+def save_channels(channel_list):
+    os.makedirs(JSON_FOLDER, exist_ok=True)
+    with open(CHANNEL_FILE, 'w') as f:
+        json.dump(channel_list, f, indent=2)
+
+def get_admin_ids():
+    ids = os.getenv('ADMIN_IDS', '')
+    if not ids:
+        # Try ADMIN_ID if ADMIN_IDS not found
+        admin_id = os.getenv('ADMIN_ID')
+        return [int(admin_id)] if admin_id else []
+    return [int(id_str.strip()) for id_str in ids.split(',') if id_str.strip()]
+ 
+def get_admin_id():
+    # First try ADMIN_ID
+    admin_id = os.getenv('ADMIN_ID')
+    if admin_id:
+        return int(admin_id)
+    
+    # Then try ADMIN_IDS
+    ids = get_admin_ids()
+    if ids:
+        return ids[0]  # Return first admin ID
+    
+    raise ValueError("Neither ADMIN_ID nor ADMIN_IDS found in .env file")
