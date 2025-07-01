@@ -117,13 +117,12 @@ class HealthMonitor:
                 f"• 𝗠𝗼𝗻𝗶𝘁𝗼𝗿 𝘀𝘁𝗮𝘁𝘂𝘀: {monitor_status}"
             )
 
-            
             await update.message.reply_text(message)
             
         except Exception as e:
             logger.error(f"Health check failed: {e}", exc_info=True)
             await update.message.reply_text(f"⚠️ Health check error: {e}")
-
+            
     async def ping(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handler for /ping command"""
         start = time.time()
@@ -132,11 +131,12 @@ class HealthMonitor:
         await msg.edit_text(f"🏓 Pong! {latency:.0f}ms")
   
 def get_maintenance_handlers():
+    health_monitor = HealthMonitor()
     return [
         CommandHandler("restart", restart_bot),
         CommandHandler("shutdown", shutdown_bot),
         CommandHandler("logs", render_logs),
         CommandHandler("reset", reset_json),
-        CommandHandler("health", lambda u, c: c.bot_data['health_monitor'].health_check(u, c)),
-        CommandHandler("ping", lambda u, c: c.bot_data['health_monitor'].ping(u, c))
+        CommandHandler("health", admin_only(health_monitor.health_check)),
+        CommandHandler("ping", admin_only(health_monitor.ping))
     ]

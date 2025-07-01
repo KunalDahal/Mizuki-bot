@@ -1,18 +1,34 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from functools import wraps
+import functools  # Changed from 'from functools import wraps' to 'import functools'
+import logging
 from util import get_admin_ids
 
+# Set up logger
+logger = logging.getLogger(__name__)
+
 def admin_only(func):
-    """Decorator to restrict command access to admins only"""
-    @wraps(func)
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        user_id = update.effective_user.id
-        admins = get_admin_ids()
+    @functools.wraps(func)  # Now using the fully qualified name
+    async def wrapper(update_or_self, context):
+        # Handle both standalone functions and class methods
+        if isinstance(update_or_self, Update):
+            update = update_or_self
+        else:
+            update = context.args[0] if context.args else None
         
-        if user_id not in admins:
-            await update.message.reply_text("⛔ Unauthorized: You don't have permission to use this command")
+        if not update or not update.effective_user:
+            logger.warning("No effective user in update")
             return
         
-        return await func(update, context, *args, **kwargs)
+        user_id = update.effective_user.id
+        if user_id not in get_admin_ids():
+            await update.message.reply_text("🚫 You are not authorized to use this command.")
+            return
+        
+        # Call the original function with correct arguments
+        if isinstance(update_or_self, Update):
+            return await func(update, context)
+        else:
+            return await func(update_or_self, update, context)
+    
     return wrapper
