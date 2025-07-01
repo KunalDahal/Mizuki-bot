@@ -169,7 +169,7 @@ class ChannelMonitor:
         except Exception as e:
             logger.error(f"Error checking channel {channel_id}: {e}")
             raise
-
+            
     async def forward_message(self, message):
         now = time.time()
         wait_time = max(0, self.min_interval - (now - self.last_forward_time))

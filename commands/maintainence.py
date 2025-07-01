@@ -104,18 +104,19 @@ class HealthMonitor:
                 monitor_status += f" ({'Connected' if monitor.client.is_connected() else 'Disconnected'})"
             
             message = (
-                "🏥 Bot Health Status:\n\n"
-                "🖥️ System:\n"
-                f"• CPU: {cpu}%\n"
-                f"• Memory: {mem.percent}% ({mem.used/1024/1024:.1f}MB used)\n"
-                f"• Disk: {disk.percent}% free\n\n"
-                "🤖 Bot:\n"
-                f"• Uptime: {uptime//3600}h {(uptime%3600)//60}m\n"
-                f"• Messages processed: {self.message_count}\n"
-                f"• Active tasks: {active_tasks}\n"
-                f"• Update queue: {app.update_queue.qsize() if app else 'N/A'}\n"
-                f"• Monitor status: {monitor_status}"
+                "🏥 𝗕𝗼𝘁 𝗛𝗲𝗮𝗹𝘁𝗵 𝗦𝘁𝗮𝘁𝘂𝘀:\n\n"
+                "🖥️ 𝗦𝘆𝘀𝘁𝗲𝗺:\n"
+                f"• 𝗖𝗣𝗨: {cpu}%\n"
+                f"• 𝗠𝗲𝗺𝗼𝗿𝘆: {mem.percent}% ({mem.used/1024/1024:.1f}MB 𝘂𝘀𝗲𝗱)\n"
+                f"• 𝗗𝗶𝘀𝗸: {disk.percent}% 𝗳𝗿𝗲𝗲\n\n"
+                "🤖 𝗕𝗼𝘁:\n"
+                f"• 𝗨𝗽𝘁𝗶𝗺𝗲: {uptime//3600}𝗵 {(uptime%3600)//60}𝗺\n"
+                f"• 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗽𝗿𝗼𝗰𝗲𝘀𝘀𝗲𝗱: {self.message_count}\n"
+                f"• 𝗔𝗰𝘁𝗶𝘃𝗲 𝘁𝗮𝘀𝗸𝘀: {active_tasks}\n"
+                f"• 𝗨𝗽𝗱𝗮𝘁𝗲 𝗾𝘂𝗲𝘂𝗲: {app.update_queue.qsize() if app else 'N/A'}\n"
+                f"• 𝗠𝗼𝗻𝗶𝘁𝗼𝗿 𝘀𝘁𝗮𝘁𝘂𝘀: {monitor_status}"
             )
+
             
             await update.message.reply_text(message)
             

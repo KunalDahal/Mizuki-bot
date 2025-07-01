@@ -2,11 +2,12 @@ import os
 from dotenv import load_dotenv
 import json
 import random
-from typing import List
+from typing import List,Union
 
 load_dotenv()
 
 JSON_FOLDER = "JSON"
+USER_FILE=os.path.join(JSON_FOLDER, "users.json")
 REPLACE_FILE=os.path.join(JSON_FOLDER, "replace.json")
 REMOVE_FILE=os.path.join(JSON_FOLDER, "remove.json")
 CHANNEL_FILE = os.path.join(JSON_FOLDER, "channel_id.json")
@@ -151,3 +152,60 @@ def get_admin_id():
         return ids[0]  # Return first admin ID
     
     raise ValueError("Neither ADMIN_ID nor ADMIN_IDS found in .env file")
+
+def load_users() -> List[str]:
+    try:
+
+        os.makedirs(JSON_FOLDER, exist_ok=True)
+        
+        # Return empty list if file doesn't exist
+        if not os.path.exists(USER_FILE):
+            return []
+            
+        # Load and validate existing data
+        with open(USER_FILE, 'r') as f:
+            users = json.load(f)
+            
+            # Ensure we always return a list of strings
+            if not isinstance(users, list):
+                raise ValueError("Invalid data format in user.json")
+                
+            return [str(user_id) for user_id in users]
+            
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"Error loading user data: {e}")
+        return []
+    except Exception as e:
+        print(f"Unexpected error loading users: {e}")
+        return []
+
+def save_users(user_ids: List[Union[str, int]]) -> bool:
+    try:
+        # Convert all IDs to strings and remove duplicates
+        unique_users = list({str(uid) for uid in user_ids})
+        
+        # Create directory if it doesn't exist
+        os.makedirs(JSON_FOLDER, exist_ok=True)
+        
+        # Write to file with pretty formatting
+        with open(USER_FILE, 'w') as f:
+            json.dump(unique_users, f, indent=2, ensure_ascii=False)
+            
+        return True
+    except Exception as e:
+        print(f"Error saving user data: {e}")
+        return False
+
+def add_user(user_id: Union[str, int]) -> bool:
+
+    try:
+        users = load_users()
+        user_str = str(user_id)
+        
+        if user_str not in users:
+            users.append(user_str)
+            return save_users(users)
+        return True  # Already exists
+    except Exception as e:
+        print(f"Error adding user: {e}")
+        return False
