@@ -134,24 +134,7 @@ def save_channels(channel_list):
 
 def get_admin_ids():
     ids = os.getenv('ADMIN_IDS', '')
-    if not ids:
-        # Try ADMIN_ID if ADMIN_IDS not found
-        admin_id = os.getenv('ADMIN_ID')
-        return [int(admin_id)] if admin_id else []
     return [int(id_str.strip()) for id_str in ids.split(',') if id_str.strip()]
- 
-def get_admin_id():
-    # First try ADMIN_ID
-    admin_id = os.getenv('ADMIN_ID')
-    if admin_id:
-        return int(admin_id)
-    
-    # Then try ADMIN_IDS
-    ids = get_admin_ids()
-    if ids:
-        return ids[0]  # Return first admin ID
-    
-    raise ValueError("Neither ADMIN_ID nor ADMIN_IDS found in .env file")
 
 def load_users() -> List[str]:
     try:
