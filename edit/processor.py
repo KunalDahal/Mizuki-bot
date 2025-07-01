@@ -118,7 +118,7 @@ class Processor:
             formatted_text += "\n\n" + "\n".join(link_list)
         
         # Format footer with blockquote, bold, and italic
-        footer_text = "@Mizuki_News_bot"
+        footer_text = "@Mizuki_Newsbot"
         footer_escaped = self.custom_escape_markdown(footer_text)
         footer = f"> _*{footer_escaped}*_"  # Blockquote + italic
         
