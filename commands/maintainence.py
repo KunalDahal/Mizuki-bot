@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from commands.admin import admin_only
 import logging
-from util import CHANNEL_FILE, REMOVE_FILE, REPLACE_FILE, POST_FILE
+from util import CHANNEL_FILE, REMOVE_FILE, REPLACE_FILE,BAN_FILE,HASH_FILE
 import psutil
 import time
 import asyncio
@@ -34,17 +34,6 @@ async def shutdown_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if 'application' in context.bot_data:
         await context.bot_data['application'].stop()
     sys.exit(0)
-
-@admin_only
-async def render_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handler for /logs command"""
-    try:
-        with open('render.log', 'r') as f:
-            logs = f.read()[-4000:]  # Get last ~4KB
-        await update.message.reply_text(f"📜 Last logs:\n\n{logs}")
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error getting logs: {str(e)}")
-
 @admin_only
 async def reset_json(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /reset command to reset JSON files"""
@@ -54,7 +43,8 @@ async def reset_json(update: Update, context: ContextTypes.DEFAULT_TYPE):
             CHANNEL_FILE: [],
             REMOVE_FILE: [],
             REPLACE_FILE: {},
-            POST_FILE: {}
+            BAN_FILE: [],
+            HASH_FILE : {}  
         }
         
         for file_path, default_value in files_to_reset.items():
@@ -135,7 +125,6 @@ def get_maintenance_handlers():
     return [
         CommandHandler("restart", restart_bot),
         CommandHandler("shutdown", shutdown_bot),
-        CommandHandler("logs", render_logs),
         CommandHandler("reset", reset_json),
         CommandHandler("health", admin_only(health_monitor.health_check)),
         CommandHandler("ping", admin_only(health_monitor.ping))

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: duplicate-detector
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run train_app.py

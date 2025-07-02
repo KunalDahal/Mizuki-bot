@@ -1,7 +1,8 @@
 import logging
-from client.monitor import ChannelMonitor
-from file.bot import run_bot
-from aiohttp import web
+import asyncio
+from forward.monitor import ChannelMonitor
+from forward.bot import run_bot
+from duplicate.mizuki import main as mizuki_main
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -9,31 +10,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def health_check(request):
-    return web.Response(text="Bot is running")
+async def run_mizuki():
+    """Run the mizuki bot"""
+    try:
+        await mizuki_main()
+    except Exception as e:
+        logger.error(f"Mizuki bot crashed: {e}")
+        raise
+
+async def run_bot_wrapper(monitor):
+    """Wrapper for the bot run function"""
+    try:
+        await run_bot(monitor)
+    except Exception as e:
+        logger.error(f"Main bot crashed: {e}")
+        raise
 
 async def main():
-    # Create a simple web application
-    app = web.Application()
-    app.router.add_get('/health', health_check)
-    
-    # Setup your bot
+    # Setup your bots
     monitor = ChannelMonitor()
-    bot_task = asyncio.create_task(run_bot(monitor))
     
-    # Setup web runner
-    runner = web.AppRunner(app)
-    await runner.setup()
+    # Create tasks for both bots
+    mizuki_task = asyncio.create_task(run_mizuki(), name="mizuki_bot")
+    bot_task = asyncio.create_task(run_bot_wrapper(monitor), name="main_bot")
     
-    # Bind to port provided by Render (default is 10000)
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, host='0.0.0.0', port=port)
-    await site.start()
+    logger.info("Starting both bots...")
     
-    # Run both bot and web server
-    await bot_task
+    # Wait for both bots to run (they will run concurrently)
+    await asyncio.gather(mizuki_task, bot_task)
 
 if __name__ == "__main__":
-    import asyncio
-    import os
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Shutting down gracefully...")
+    except Exception as e:
+        logger.error(f"Fatal error: {e}")

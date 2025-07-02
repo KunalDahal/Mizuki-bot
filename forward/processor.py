@@ -7,12 +7,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class Processor:
     def __init__(self):
         self.remove_words = load_remove_words()
         self.replace_words = load_replace_words()
-    
+            
     def extract_links(self, text):
         """Extract all URLs from text"""
         if not text:
@@ -79,48 +78,35 @@ class Processor:
         pattern = r'(?<!\\)([' + re.escape(escape_chars) + r'])'
         return re.sub(pattern, r'\\\1', text)
 
-    def process(self, caption):
-        """Main processing pipeline with MarkdownV2 formatting"""
+    async def process(self, caption):
+        
         if caption is None:
             caption = ""
 
-        # Extract links before any processing
         links = self.extract_links(caption)
         
-        # Remove URLs from original caption for text processing
         url_removed = re.sub(r'https?://\S+', '', caption)
         
-        # Translation
         translated = self.translate_text(url_removed)
         
-        # Remove emojis
         no_emojis = self.remove_emojis(translated)
         
-        # Word removal and replacement
         removed = self.remove_words_from_text(no_emojis)
         replaced = self.replace_words_in_text(removed).strip()
         
-        # Escape Markdown characters for main text
         main_text = self.custom_escape_markdown(replaced)
         
-        # Apply bold+italic formatting to main text
         formatted_text = f"_*{main_text}*_"
         
-        # Add links with Markdown formatting
         if links:
-            # Format each link separately
             link_list = []
             for idx, link in enumerate(links, 1):
-                # Escape display text
                 display_text = self.custom_escape_markdown(link)
-                # Format as Markdown link
                 link_list.append(f"[Link {idx}]:({link})")
             formatted_text += "\n\n" + "\n".join(link_list)
-        
-        # Format footer with blockquote, bold, and italic
         footer_text = "@Mizuki_Newsbot"
         footer_escaped = self.custom_escape_markdown(footer_text)
-        footer = f"> _*{footer_escaped}*_"  # Blockquote + italic
+        footer = f"> _*{footer_escaped}*_"
         
         return f"{formatted_text}\n\n{footer}"
     

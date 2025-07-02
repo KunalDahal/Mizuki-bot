@@ -3,16 +3,47 @@ from dotenv import load_dotenv
 import json
 import random
 from typing import List,Union
-
 load_dotenv()
 
+# Media size limits
+MAX_PHOTO_SIZE = 50_000_000       # 50MB
+MAX_VIDEO_SIZE = 150_000_000       # 150MB 
+VIDEO_HASH_CHUNK_SIZE = 2_000_000  # 2MB chunks
+VIDEO_HASH_SAMPLE_SIZE = 20_000_000 # 20MB to hash
+
 JSON_FOLDER = "JSON"
+os.makedirs(JSON_FOLDER, exist_ok=True)
+
 USER_FILE=os.path.join(JSON_FOLDER, "users.json")
 REPLACE_FILE=os.path.join(JSON_FOLDER, "replace.json")
 REMOVE_FILE=os.path.join(JSON_FOLDER, "remove.json")
 CHANNEL_FILE = os.path.join(JSON_FOLDER, "channel_id.json")
-POST_FILE = os.path.join(JSON_FOLDER, "post_id.json")
+HASH_FILE = os.path.join(JSON_FOLDER, "hash.json")
+BAN_FILE = os.path.join(JSON_FOLDER, "banned.json")
+MAX_HASH_ENTRIES = 500
 
+# ensure list files
+for file in [BAN_FILE, CHANNEL_FILE, REMOVE_FILE, USER_FILE]:
+    if not os.path.exists(file):
+        with open(file, 'w') as f:
+            json.dump([], f)
+
+# ensure dict files
+for file in [REPLACE_FILE, HASH_FILE]:
+    if not os.path.exists(file):
+        with open(file, 'w') as f:
+            json.dump({}, f)
+
+# Load banned words
+def load_banned_words():
+    with open(BAN_FILE, 'r') as f:
+        return json.load(f)
+
+# Save banned words
+def save_banned_words(words):
+    with open(BAN_FILE, 'w') as f:
+        json.dump(words, f)
+        
 def load_remove_words() -> List[str]:
     try:
         # Create directory if it doesn't exist
@@ -49,7 +80,12 @@ def save_remove_words(words):
         json.dump(words, f, indent=2)
         
 def get_bot_token():
-    token = os.getenv('BOT_TOKEN')
+    token = os.getenv('BOT_TOKEN_1')
+    if not token:
+        raise ValueError("BOT_TOKEN not found in .env file")
+    return token
+def get_bot_token_2():
+    token = os.getenv('BOT_TOKEN_2')
     if not token:
         raise ValueError("BOT_TOKEN not found in .env file")
     return token

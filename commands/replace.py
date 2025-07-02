@@ -36,7 +36,7 @@ async def remove_replace(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(f"No replacement found for '{original}'")
 
-def get_handlers():
+def get_rep_handlers():
     return [
         CommandHandler("arep", add_replace),
         CommandHandler("rrep", remove_replace)
