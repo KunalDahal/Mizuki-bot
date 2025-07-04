@@ -22,10 +22,10 @@ from util import (
     MAX_HASH_ENTRIES,
     get_target_channel,
     get_bot_token_2,
-    get_admin_ids,
-    escape_markdown_v2
+    get_admin_ids
 )
 from mizuki_editor.processor import Processor
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -101,41 +101,50 @@ class ContentChecker:
             try:
                 video = message.video
                 file = await video.get_file()
-                file_bytes = bytearray()
                 
-                async for chunk in file.download_as_bytearray(chunk_size=1_000_000):
-                    if len(file_bytes) >= 10_000_000:  # 10MB max
-                        break
-                    file_bytes.extend(chunk)
+                if not file.file_path:
+                    logger.error("File path not available for video")
+                    return media_hashes
+                
+                # Construct download URL
+                url = f"https://api.telegram.org/file/bot{self.bot.token}/{file.file_path}"
+                logger.info(f"Downloading video from: {url}")
+                
+                sha256 = hashlib.sha256()
+                md5 = hashlib.md5()
+                total_bytes = 0
+                max_size = 200 * 1024 * 1024  # 200MB limit
+                
+                # Download and hash in chunks
+                async with httpx.AsyncClient() as client:
+                    async with client.stream("GET", url) as response:
+                        if response.status_code != 200:
+                            logger.error(f"Failed to download video: HTTP {response.status_code}")
+                            return media_hashes
+                            
+                        async for chunk in response.aiter_bytes():
+                            chunk_size = len(chunk)
+                            if total_bytes + chunk_size > max_size:
+                                # Only process remaining bytes to reach exactly 200MB
+                                remaining = max_size - total_bytes
+                                if remaining > 0:
+                                    sha256.update(chunk[:remaining])
+                                    md5.update(chunk[:remaining])
+                                break
+                            
+                            sha256.update(chunk)
+                            md5.update(chunk)
+                            total_bytes += chunk_size
                 
                 media_hashes.append({
                     'type': 'video',
-                    'sha256': hashlib.sha256(file_bytes).hexdigest(),
-                    'md5': hashlib.md5(file_bytes).hexdigest(),
+                    'sha256': sha256.hexdigest(),
+                    'md5': md5.hexdigest(),
                     'file_id': video.file_id
                 })
+                logger.info(f"Hashed first {min(total_bytes, max_size)/1024/1024:.1f}MB of video")
             except Exception as e:
                 logger.error(f"Error processing video: {e}")
-        
-        elif message.document:
-            try:
-                doc = message.document
-                file = await doc.get_file()
-                file_bytes = bytearray()
-                
-                async for chunk in file.download_as_bytearray(chunk_size=1_000_000):
-                    if len(file_bytes) >= 10_000_000:  # 10MB max
-                        break
-                    file_bytes.extend(chunk)
-                
-                media_hashes.append({
-                    'type': 'document',
-                    'sha256': hashlib.sha256(file_bytes).hexdigest(),
-                    'md5': hashlib.md5(file_bytes).hexdigest(),
-                    'file_id': doc.file_id
-                })
-            except Exception as e:
-                logger.error(f"Error processing document: {e}")
                 
         return media_hashes
 
