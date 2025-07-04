@@ -1,106 +1,254 @@
 {
-  "805": [
-    {
-      "type": "photo",
-      "phash": "9b7d258fd811b20b",
-      "sha256": "d2635437e40471d199b679c60376fc3fe5c6e8dbb01dd14a57d9176e232a8de4",
-      "file_id": "AgACAgQAAyEFAASNVq21AAIDJWhnpDmxxxP8ZGgRBqNk8mM6S91aAAIryTEbfdNBUzc7y5_yeUPeAQADAgADeQADNgQ"
-    }
-  ],
-  "806": [
-    {
-      "type": "photo",
-      "phash": "b9bd7745c8a44193",
-      "sha256": "f88899b5ee6e5f319891c1d2e9459985cb93ea977f6c66fbd00655fb5b79d4bb",
-      "file_id": "AgACAgIAAyEFAASNVq21AAIDJmhnpNtxPsY6GWGSEX5b0oIjgfuiAAKl8jEbFcY5SzHYdwJRLTYDAQADAgADeAADNgQ"
-    }
-  ],
-  "807": [
-    {
-      "type": "photo",
-      "phash": "ee1d91e0d0e643e3",
-      "sha256": "aacbd5094c3568ed39263c2fe5cc6f17019407bb7003e710b7a7d036263a2dc1",
-      "file_id": "AgACAgIAAyEFAASNVq21AAIDJ2hnpPhzTY_wjbMDPOPUvp2-VhO0AAJ67zEbIJM5S0QuxB0R17fKAQADAgADeQADNgQ"
-    }
-  ],
-  "808": [
-    {
-      "type": "photo",
-      "phash": "990de6168233f4e7",
-      "sha256": "871825a022f6430fa000cace7c9ed7a65963db8dc516847fdb7b0f76ab2d9025",
-      "file_id": "AgACAgIAAyEFAASNVq21AAIDKGhnpPiE2CA5YeUYmXj9dHf1MGL_AAJ77zEbIJM5SzIUrGeHGrgXAQADAgADeQADNgQ"
-    }
-  ],
-  "809": [
-    {
-      "type": "photo",
-      "phash": "ec9d95c692e6c2c2",
-      "sha256": "0ad3d53e3476857ca5377c43122bbd9b6a75ed4d2f3f4ace77ef72342cbbdb94",
-      "file_id": "AgACAgIAAyEFAASNVq21AAIDKWhnpPj7O-O59iBXdJdsEnrJKErOAAJ87zEbIJM5S20E7xrVlq4_AQADAgADeQADNgQ"
-    }
-  ],
-  "810": [
-    {
-      "type": "photo",
-      "phash": "a11e522a6fc13df1",
-      "sha256": "3a1a138b90968c493b33480ee9849aae7f65a21b21ada15f66574e0bf2142154",
-      "file_id": "AgACAgQAAyEFAASNVq21AAIDKmhnporAjAv4Vq4a6VvMkXeE6wyMAALByjEbFrEBU9ogJPxfnIveAQADAgADeQADNgQ"
-    }
-  ],
-  "811": [
-    {
-      "type": "photo",
-      "phash": "bd784be4c14f84c9",
-      "sha256": "e49ff0ccbacbe09bede227ff1a6adc20a4db8913f71a6083b351fb72baa59198",
-      "file_id": "AgACAgUAAyEFAASNVq21AAIDK2hnpr9SrH1n6M_gH44JGWm3VRIRAAKxyjEb2CZAV2s9FQbsrJuLAQADAgADeAADNgQ"
-    }
-  ],
-  "812": [
-    {
-      "type": "photo",
-      "phash": "d0942f681f696eca",
-      "sha256": "0a67ac5c54978d25cb6c12917a95548617495bc83c4bfe71522fad471ed6c930",
-      "file_id": "AgACAgUAAyEFAASNVq21AAIDLGhnpr_oIP4ZN6vyjmNAZp6-55kLAAKyyjEb2CZAV04wKTY2LwJdAQADAgADeQADNgQ"
-    }
-  ],
-  "815": [
-    {
-      "type": "photo",
-      "phash": "b0b056c76c4ec733",
-      "sha256": "6e1b41e486505f9d6ebacbc9b8cb698aea4886e329c8407630a95002125d264f",
-      "file_id": "AgACAgUAAyEFAASNVq21AAIDL2hnp4faDwFApEEPMNjocFUI-Tb8AAK1yjEb2CZAV4QQ7hugdd70AQADAgADeAADNgQ"
-    }
-  ],
-  "820": [
-    {
-      "type": "photo",
-      "phash": "cc92636c693333dc",
-      "sha256": "ff7e2864f508470c99c340313182ee3c787a6cefeb07b72d31bebc0935d7922f",
-      "file_id": "AgACAgUAAyEFAASNVq21AAIDNGhnqHJkP5B8TaccryCOn_EuHaB5AAK6yjEb2CZAV3m-VDKy4QyvAQADAgADeQADNgQ"
-    }
-  ],
-  "821": [
-    {
-      "type": "photo",
-      "phash": "c2d29819d21be377",
-      "sha256": "5fcbcdd8336cd6f9e4d0789fa241b3720cac05506e594d67b55fa601175a6248",
-      "file_id": "AgACAgUAAyEFAASNVq21AAIDNWhnqHJAhm13cC6f_Omel35Cmz9EAAK7yjEb2CZAVyFj31ox8bITAQADAgADeAADNgQ"
-    }
-  ],
-  "824": [
-    {
-      "type": "photo",
-      "phash": "cd32333232ee33cc",
-      "sha256": "d9d1a14613b1ef63780a1ff8b1ab727ff3df85289e12520ef7fd58193278803d",
-      "file_id": "AgACAgUAAyEFAASqHzUzAAPfaGeqQ4kpVEducaYpkh9R0WE7mo4AAgrIMRsy-EBXLfdG94tgjyYBAAMCAAN5AAM2BA"
-    }
-  ],
-  "825": [
-    {
-      "type": "photo",
-      "phash": "8f6270641f966c97",
-      "sha256": "c6b37a8a2dee710ef24e6adde403908d421b7733b6c5d61cd916790e3c32b5ee",
-      "file_id": "AgACAgUAAyEFAASqHzUzAAPgaGeqQ8bS8PR5T-s1bSjl55UDL-4AAgvIMRsy-EBXRcyaBGGPWjgBAAMCAAN5AAM2BA"
-    }
-  ]
+  "5455f6b0d61af5f66f89e7127b463a73": {
+    "caption": "\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc#FGOJP\n\n\ud83d\udce3 Anteprima di una nuova Craft Essence per il 10\u00b0 anniversario, raffigurante Nitocris Alter.\n\n\u269c\ufe0f @fateitaly_news",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "bfc6f000d23978c7",
+        "sha256": "8a607996fa3ab899e8e03634ba288abb9621e2a47883aa2a6ff14888f7158085",
+        "md5": "9c99895a66970b3463a9f7665acc3b7b",
+        "file_id": "AgACAgQAAyEFAASNVq21AAIDf2hn2u4bU6DR_esByRFumz9EvXLFAAIfyzEbtQxBU9EukXQq5ShvAQADAgADdwADNgQ"
+      }
+    ],
+    "timestamp": 1751637059
+  },
+  "6870fbfb0b49ed36d8ab6936f07e58da": {
+    "caption": " @Mizuki_Newsbot",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "fcbc03fad8813ce0",
+        "sha256": "fbebd44face13cc357aedf0d733dbcb7010379cbc64c4c9fea5785f209850c0a",
+        "md5": "34ac9cafc66b5e495654d1857df709db",
+        "file_id": "AgACAgUAAyEFAASNVq21AAIDaWhnzCg20Oy3MffvjJTKz1UgLEN7AAKNyjEbsQU4VyxUXRjcXEm7AQADAgADeQADNgQ"
+      }
+    ],
+    "timestamp": 1751637380
+  },
+  "f49490a1170e2332396ac99f7ec4ccfb": {
+    "caption": "dcdcddca\n\n @Mizuki_Newsbot",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "b0b056c76c4ec733",
+        "sha256": "6e1b41e486505f9d6ebacbc9b8cb698aea4886e329c8407630a95002125d264f",
+        "md5": "46c03f1f80ff6f61cb5dfab8d5535b80",
+        "file_id": "AgACAgUAAyEFAASNVq21AAIDV2hnySjID7xb3oCHjfI9jz3UcX_MAAJ7yjEbsQU4V55oyko8yBhmAQADAgADeAADNgQ",
+        "processed_caption": "dcdcddca\n\n @Mizuki_Newsbot"
+      }
+    ],
+    "timestamp": 1751637553
+  },
+  "65078b6dc936bcd53baf434db4b8ee23": {
+    "caption": "Quest\u2019anno \u00e8 in arrivo \u201cA New Dawn\u201d nei cinema italiani grazie a Dynit.\n\n\ud83c\udf38\u00a0Seguiteci su @AnimeNewsItaliaa1",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "e0342b7e6c993366",
+        "sha256": "31e7020d3d662da25bde3438eeb57afbd78720bdf395435f6d095cc68ed188e3",
+        "md5": "661699c685c4ec8170bf2f16d84fc012",
+        "file_id": "AgACAgQAAyEFAASNVq21AAIDPWhnvElLxFogvqZJ6DGqRcmNnDtBAAJmyTEbfdNBUxkSQEuMcPOYAQADAgADeQADNgQ"
+      }
+    ],
+    "timestamp": 1751637742
+  },
+  "cec8deb3a15fa357192f00988e564c37": {
+    "caption": "Rilasciata una character visual per la 2\u00ba stagione di \u201cA Couple of Cuckoos\u201d in uscita l\u20198 luglio.\n\n\ud83c\udf38\u00a0Seguiteci su @AnimeNewsItaliaa1",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "e684d959361b9927",
+        "sha256": "4ac2d1a4db7e58109bf87a11694bf292f301b89ab268edfa9dd69148d4eb1d7d",
+        "md5": "7b97d3df94f3f781cd9733397310a3d0",
+        "file_id": "AgACAgQAAxkBAAOcaGfhFjcWgYBsxoy8ZDfSHqyb89AAAj7JMRt900FT_I8_6y_YkNEBAAMCAAN5AAM2BA"
+      }
+    ],
+    "timestamp": 1751638300
+  },
+  "195257013d36ea331ccb38d47b004b1c": {
+    "caption": "Annunciato un nuovo adattamento animato del manga \u201cSugar Sugar Rune\u201d, studio: khara\n\n\ud83c\udf38\u00a0Seguiteci su @AnimeNewsItaliaa1",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "dbd4fea053d80307",
+        "sha256": "a21dc718a1fd967bfb09782d38fe0ad3153dc5a334e7d2841ea11ecf2ab6671d",
+        "md5": "9aed65aecaacab4cdc36f009036cacdd",
+        "file_id": "AgACAgQAAxkBAAOdaGfhSdy4xs-TSPtcKY9CGl_JnKEAAi_JMRt900FTsdcZdyTyUdIBAAMCAAN4AAM2BA"
+      }
+    ],
+    "timestamp": 1751638355
+  },
+  "63991bf2884edb789de66356a9a06f69": {
+    "caption": "\u2694\ufe0f\ud83e\ude78 Nuova key visual per il gran finale di \u201cBleach: Thousand-Year Blood War\u201d!\n\n\u00c8 stata rilasciata una nuova key visual per il 4\u00b0 cour della saga, che concluder\u00e0 l\u2019epico arco narrativo del Thousand-Year Blood War!\n\u2728 L\u2019uscita \u00e8 prevista nel corso del 2026, e i fan possono aspettarsi una chiusura spettacolare per l\u2019opera di Tite Kubo.\n\nPrepariamoci a un finale carico di battaglie leggendarie e rivelazioni! \ud83d\udd25\n\n\ud83c\udccf Seguici su @WickedAnimeRiserva",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "83d7698679a065b9",
+        "sha256": "971059b30bcabf02e64693299aae310fbeedc1e1178d0868970cb14095af4146",
+        "md5": "668564268522b897dac13da581d2ba8f",
+        "file_id": "AgACAgQAAxkBAAOeaGfh5AvADXLVzgJRumQ0NyqHd1gAAibHMRts-zhTdhChjB8-e7cBAAMCAAN4AAM2BA"
+      }
+    ],
+    "timestamp": 1751638502
+  },
+  "a13dfc8467b76481bd25293652674ca5": {
+    "caption": "\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc\ud83d\uddbc#FGOJP\n\n\ud83d\udce3 Anteprima di una nuova Craft Essence per il 10\u00b0 anniversario, raffigurante Ushiwakamaru.\n\n\u269c\ufe0f @fateitaly_news",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "f8cae50ce73c4ae0",
+        "sha256": "cec4723636f0985416b4c620c8d8e6e8836ea41c84f4fc3b9aa5a424ad3751a2",
+        "md5": "05690f687e19c41c23471092b3e16310",
+        "file_id": "AgACAgQAAxkBAAOfaGfu3dmz-cBQBO2G5s-r1kUxavYAAiDLMRu1DEFTwR15lfBIcWoBAAMCAAN5AAM2BA"
+      }
+    ],
+    "timestamp": 1751641825
+  },
+  "61129fa14bf4a34a52b8cb04d643da93": {
+    "caption": "Annuncio J-POP\n\nTornano i personaggi di Twilight Out of Focus\ud83d\udcfd\ufe0f\n\nMao e Isashi si sono conosciuti nel dormitorio studentesco e tra loro \u00e8 sbocciato l\u2019amore. Ora per\u00f2, nell\u2019ultimo inverno prima del terzo anno un trauma dal passato minaccia di dividerli\u2026\n\nTwilight Out of Focus Long Take nel Cinema Club Box 3 \u00e8 disponibile in fumetteria, libreria e store online.\n\n\ud83c\udf38\u00a0Seguiteci su @AnimeNewsItaliaa1",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "a3d6d46899e548bc",
+        "sha256": "8d9d0d4c91b2bc587d186ed48af0a3bc7fb678dd05454cf0d898ca9f934b320c",
+        "md5": "06d2ed0ea69d65ff0311907b53624c2b",
+        "file_id": "AgACAgQAAxkBAAOgaGfy_6VOojNw949L5bqEaTpaRhEAAqbMMRt90zlT-8uxHD4wa2IBAAMCAAN5AAM2BA",
+        "processed_caption": "Annuncio J-POP\n\nTornano i personaggi di Twilight Out of Focus\ud83d\udcfd\ufe0f\n\nMao e Isashi si sono conosciuti nel dormitorio studentesco e tra loro \u00e8 sbocciato l\u2019amore. Ora per\u00f2, nell\u2019ultimo inverno prima del terzo anno un trauma dal passato minaccia di dividerli\u2026\n\nTwilight Out of Focus Long Take nel Cinema Club Box 3 \u00e8 disponibile in fumetteria, libreria e store online.\n\n\ud83c\udf38\u00a0Seguiteci su @AnimeNewsItaliaa1"
+      }
+    ],
+    "timestamp": 1751642882
+  },
+  "5403032379766e2c4b55ccc002b3e261": {
+    "caption": "sxAscac",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "eea0f4875c8627c9",
+        "sha256": "c2f36ed60719d2d58f6a6a805d6672a42cd89139fa8f1847346db31fda65f053",
+        "md5": "42819e5bc4df1a135d1baf2f52d9b958",
+        "file_id": "AgACAgUAAyEFAASNVq21AAIDe2hnzbUyHhXFRdwB9L-Z1mkZJnleAAKWyjEbsQU4V35ntvIX3wOEAQADAgADeAADNgQ"
+      },
+      {
+        "type": "photo",
+        "phash": "ef89349431536799",
+        "sha256": "50637313a9aefe196c15d22bee27ddf1258e19f37136ac2799a1178f35d9f0f9",
+        "md5": "6ce8e52dd72be8cf8c3f95535eee3684",
+        "file_id": "AgACAgUAAyEFAASNVq21AAIDfGhnzbVZdwEhIi5LOjWbnNEgN0VYAAKXyjEbsQU4V8TLuTOKQ2m-AQADAgADeAADNgQ"
+      }
+    ],
+    "timestamp": 1751642933
+  },
+  "2fad4c1a886d0586fb848fda5d277ad5": {
+    "caption": "_\\#Recordofragnarok\n\n Volume 3 of Shuumatsu No Valkyre: Forbidden Tale \\- Gods Apocalypse, Spin \\-Off of Record of Ragnarok, Naruse Otsuhiko and Okamoto IPPEI\\. \n\n @animeItaliaNews_\n\n> _@Mizuki\\_Newsbot_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "a2b79da78cd4aac0",
+        "sha256": "1aa38bde35d502981ec928c6a2ab1798e63921d6d1230d96ba3542ec11ada6eb",
+        "md5": "aae1fc67b9bc8daafb9e058dfb366b44",
+        "file_id": "AgACAgQAAyEFAASNVq21AAIDPmhnvVmtYVQe9wgXLql0Veu9jCN3AALeyjEb9c04U6z8ZQjKw__dAQADAgADdwADNgQ"
+      }
+    ],
+    "timestamp": 1751644432
+  },
+  "8f243e2f060a6f1b06a209b3b775fba4": {
+    "caption": "_*Illustration of Kukulkan made by Asamitsu, illustrator of the CE \"Choco Rafting\"\\.\n\n @Fateitaly\\_News*_\n\n> _*@Mizuki\\_Newsbot*_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "f624cdc2946c7999",
+        "sha256": "7bdfc387ad56a886855bd21267c21584fc08bdf9547ebca7fe7b20fff4e39f7a",
+        "md5": "0e471c747c6f09d7558533fe36c116e2",
+        "file_id": "AgACAgQAAxkBAAOnaGf5hCCM2DK4O7hf_0R9LGPCc9gAAlLKMRu1DEFTU__etWmSOrMBAAMCAAN3AAM2BA",
+        "processed_caption": "_*Illustration of Kukulkan made by Asamitsu, illustrator of the CE \"Choco Rafting\"\\.\n\n @Fateitaly\\_News*_\n\n> _*@Mizuki\\_Newsbot*_"
+      }
+    ],
+    "timestamp": 1751644553
+  },
+  "c0a4fe5faf945bea87b58f0d9f93aca6": {
+    "caption": "_*zccacc*_\n\n> _*@Mizuki\\_Newsbot*_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "d0942f681f696eca",
+        "sha256": "0a67ac5c54978d25cb6c12917a95548617495bc83c4bfe71522fad471ed6c930",
+        "md5": "b50ec475f767eeca100157a57795721d",
+        "file_id": "AgACAgUAAyEFAASOEOJSAAIPx2hnzTONlcAFhctPHKycPVuwPsH9AAJDxTEbyONBVwRa1GTS2DlDAQADAgADeQADNgQ",
+        "processed_caption": "_*zccacc*_\n\n> _*@Mizuki\\_Newsbot*_"
+      },
+      {
+        "type": "photo",
+        "phash": "a11e522a6fc13df1",
+        "sha256": "3a1a138b90968c493b33480ee9849aae7f65a21b21ada15f66574e0bf2142154",
+        "md5": "10f99852fa8ffde8ed8cfd1034fd1cdc",
+        "file_id": "AgACAgUAAyEFAASNVq21AAIDQ2hnwPSMXsiDTwRTjoo2DhN2ghYDAAL3yjEb2CZAVyTMlKnqfV6mAQADAgADeQADNgQ",
+        "processed_caption": "_*zccacc*_\n\n> _*@Mizuki\\_Newsbot*_"
+      }
+    ],
+    "timestamp": 1751644589
+  },
+  "3444deb7510c8ed631d5c4827fd72bfe": {
+    "caption": "_*dcadaefaef*_\n\n> _*@Mizuki\\_Newsbot*_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "f966c692943b8699",
+        "sha256": "d806fe3135c539242fb721a2118b8234ec0732ae5d61b8a0fa447b78300c30f5",
+        "md5": "260858af2f393f5c992970bf1a21ed48",
+        "file_id": "AgACAgUAAyEFAASOEOJSAAIPzWhn-c66-dJh8ntQlWu8kDSwgHd9AAJzxjEbyONBV4d2QBOyIEPDAQADAgADeQADNgQ"
+      },
+      {
+        "type": "photo",
+        "phash": "b0bdd7888512dda5",
+        "sha256": "a48c903acffa114f4e2b98c975ab2a2c5978afbca71f555db37a3d4570178a24",
+        "md5": "f1743cc0c3b59060325eb6afe598fc3b",
+        "file_id": "AgACAgUAAyEFAASOEOJSAAIPzmhn-c5xle9TqT7J0ndc2G1IonoqAAJ0xjEbyONBV_nUeyZn2CUTAQADAgADeQADNgQ"
+      }
+    ],
+    "timestamp": 1751644652
+  },
+  "a5ca80e513ca4cc9eb059d51f11f11b2": {
+    "caption": "_*FAEFAEG*_\n\n> _*@Mizuki\\_Newsbot*_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "c75c0d5e989768b4",
+        "sha256": "cc0de1ad9b6a29493ac6426674fbda9f13011bc6a04f56efc3ed94dce30a655b",
+        "md5": "06af8581002e531b9d4c3f423722e983",
+        "file_id": "AgACAgUAAxkBAAOtaGf8UgqRTxNWwkCjI4iq30YV0bIAAhjJMRv4UUFXbasJbHsXnoQBAAMCAAN5AAM2BA",
+        "processed_caption": "_*FAEFAEG*_\n\n> _*@Mizuki\\_Newsbot*_"
+      },
+      {
+        "type": "photo",
+        "phash": "d593d2934b39ccc1",
+        "sha256": "8d75179c2b8f790ee230a030b5244dfe8deb7fe3f27cc4c68bf2172797f69835",
+        "md5": "d954fe03e37b81a8deccfc99af6f2b75",
+        "file_id": "AgACAgUAAxkBAAOuaGf8Uth8bCSTdb2KBf-9r3y5ad8AAhnJMRv4UUFXihPYULpw0LsBAAMCAAN5AAM2BA",
+        "processed_caption": "_*FAEFAEG*_\n\n> _*@Mizuki\\_Newsbot*_"
+      }
+    ],
+    "timestamp": 1751645279
+  },
+  "eeb85795e90943bead12941757114010": {
+    "caption": "\n\n> _*@Mizuki\\_Newsbot*_",
+    "media": [
+      {
+        "type": "photo",
+        "phash": "f768761a065e0579",
+        "sha256": "7d1ba628be3b1246918e792366ae3987136931f9921dceb2ee95bad469606c54",
+        "md5": "4dfa207ee1645fa099b011a2ea65762c",
+        "file_id": "AgACAgUAAxkBAAOvaGf8e-ZkTdV87QVj_XKMBxlPb1cAAhvJMRv4UUFXeChk9p3s91sBAAMCAAN5AAM2BA",
+        "processed_caption": "\n\n> _*@Mizuki\\_Newsbot*_"
+      },
+      {
+        "type": "photo",
+        "phash": "9119384fa7513eec",
+        "sha256": "9ed4b2a7c7e3cf9d3f9bb90d579ec8fcd041849425b346ade27f815ff3dd8fa7",
+        "md5": "ed1182627690d140352f4d7643aa5a33",
+        "file_id": "AgACAgUAAxkBAAOwaGf8eyptwRSAzfJuTW4ca5hO-OQAAhzJMRv4UUFXfP4vjkp0NwQBAAMCAAN4AAM2BA",
+        "processed_caption": "\n\n> _*@Mizuki\\_Newsbot*_"
+      }
+    ],
+    "timestamp": 1751645315
+  }
 }

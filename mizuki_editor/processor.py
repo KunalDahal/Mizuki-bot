@@ -1,10 +1,10 @@
 import re
+import asyncio
+import logging
 from telegram import Bot, InputMediaPhoto, InputMediaVideo
 from telegram.constants import ParseMode
-from util import load_remove_words, load_replace_words,get_bot_token_2
-import asyncio
 from deep_translator import GoogleTranslator
-import logging
+from util import load_remove_words, load_replace_words, get_bot_token_2, escape_markdown_v2
 
 logger = logging.getLogger(__name__)
 
@@ -63,68 +63,92 @@ class Processor:
             if not text:
                 return ""
                 
-            translated = GoogleTranslator(source='auto', target='en').translate(text)
-            return translated if translated else text
+            # Split text into chunks to avoid translation length limits
+            max_chunk_size = 5000
+            chunks = [text[i:i+max_chunk_size] for i in range(0, len(text), max_chunk_size)]
+            
+            translated_chunks = []
+            for chunk in chunks:
+                translated = GoogleTranslator(source='auto', target='en').translate(chunk)
+                if translated:
+                    translated_chunks.append(translated)
+            
+            return " ".join(translated_chunks) if translated_chunks else text
         except Exception as e:
             logger.error(f"Translation failed: {str(e)}")
             return text
 
-    def custom_escape_markdown(self, text):
-        """Escape MarkdownV2 reserved characters without over-escaping"""
-        if not text:
-            return ""
-        # Escape backslashes first
-        text = text.replace('\\', '\\\\')
-        escape_chars = '_*[]()~`>#+-=|{}.!'
-        pattern = r'(?<!\\)([' + re.escape(escape_chars) + r'])'
-        return re.sub(pattern, r'\\\1', text)
-
     async def process(self, caption):
-        
+        """Process caption through the full text pipeline"""
         if caption is None:
             caption = ""
 
+        # Step 1: Extract links
         links = self.extract_links(caption)
         
+        # Step 2: Remove URLs from main text
         url_removed = re.sub(r'https?://\S+', '', caption)
         
+        # Step 3: Translate to English
         translated = self.translate_text(url_removed)
         
+        # Step 4: Remove emojis
         no_emojis = self.remove_emojis(translated)
         
+        # Step 5: Remove banned words
         removed = self.remove_words_from_text(no_emojis)
+        
+        # Step 6: Replace words
         replaced = self.replace_words_in_text(removed).strip()
         
-        main_text = self.custom_escape_markdown(replaced)
+        # Step 7: Escape markdown characters
+        main_text = escape_markdown_v2(replaced)
         
-        formatted_text = f"_*{main_text}*_"
+        # Format main text
+        formatted_text = f"_*{main_text}*_" if main_text else ""
         
+        # Add links section if links exist
         if links:
             link_list = []
             for idx, link in enumerate(links, 1):
-                display_text = self.custom_escape_markdown(link)
-                link_list.append(f"[Link {idx}]:({link})")
-            formatted_text += "\n\n" + "\n".join(link_list)
-        footer_text = "@Mizuki_Newsbot"
-        footer_escaped = self.custom_escape_markdown(footer_text)
-        footer = f"> _*{footer_escaped}*_"
+                # Escape only the display text, not the URL
+                display_text = f"Link {idx}"
+                escaped_display = escape_markdown_v2(display_text)
+                link_list.append(f"[{escaped_display}]({link})")
+            links_section = "\n\n" + "\n".join(link_list)
+            formatted_text += links_section
         
-        return f"{formatted_text}\n\n{footer}"
+        # Add footer
+        footer_text = "@Mizuki_Newsbot"
+        footer_escaped = escape_markdown_v2(footer_text)
+        footer = f"\n\n> _*{footer_escaped}*_"
+        
+        return f"{formatted_text}{footer}"
     
-    async def forward_to_channel(self, content, is_group, target_channel_id, bot_token):
-        """Forward processed content to target channel with HTML parsing"""
-        bot = Bot(token=bot_token)
+    async def forward_to_channel(self, content, target_channel_id):
+        """Forward processed content to target channel with MarkdownV2 parsing"""
+        bot = Bot(token=get_bot_token_2())
         
         try:
-            if is_group:
+            if isinstance(content, list):  # Media group
                 # Build media group
                 media_group = []
                 for i, media in enumerate(content):
-                    media_type = InputMediaPhoto if media['type'] == 'photo' else InputMediaVideo
+                    # Determine media type
+                    if media['type'] == 'photo':
+                        media_type = InputMediaPhoto
+                    elif media['type'] in ['video', 'document']:
+                        media_type = InputMediaVideo
+                    else:
+                        continue
                     
                     # Apply processed caption only to first media
-                    caption = media.get('processed_caption') if i == 0 else None
-                    parse_mode = ParseMode.HTML if caption else None
+                    if i == 0:
+                        caption = media.get('processed_caption')
+                        parse_mode = ParseMode.MARKDOWN_V2
+                    else:
+                        caption = None
+                        parse_mode = None
                     
                     media_group.append(media_type(
                         media=media['file_id'],
@@ -132,35 +156,34 @@ class Processor:
                         parse_mode=parse_mode
                     ))
                 
+                # Send media group
                 await bot.send_media_group(
                     chat_id=target_channel_id,
                     media=media_group
                 )
-            else:
-                # Handle single message
+            else:  # Single message
                 media = content[0]
                 caption = media.get('processed_caption')
-                parse_mode = ParseMode.MARKDOWN_V2 if caption else None
                 
                 if media['type'] == 'text':
                     await bot.send_message(
                         chat_id=target_channel_id,
                         text=caption,
-                        parse_mode=parse_mode
+                        parse_mode=ParseMode.MARKDOWN_V2
                     )
                 elif media['type'] == 'photo':
                     await bot.send_photo(
                         chat_id=target_channel_id,
                         photo=media['file_id'],
                         caption=caption,
-                        parse_mode=parse_mode
+                        parse_mode=ParseMode.MARKDOWN_V2
                     )
-                elif media['type'] == 'video':
+                elif media['type'] in ['video', 'document']:
                     await bot.send_video(
                         chat_id=target_channel_id,
                         video=media['file_id'],
                         caption=caption,
-                        parse_mode=parse_mode
+                        parse_mode=ParseMode.MARKDOWN_V2
                     )
             
             return True
@@ -169,17 +192,18 @@ class Processor:
             return False
     
     async def forward_to_targets(self, content, target_ids):
-        bot = Bot(token=get_bot_token_2())  # Create bot instance
+        """Forward processed content to multiple target channels"""
+        bot = Bot(token=get_bot_token_2())
         
         for target_id in target_ids:
             try:
                 # For media groups
                 if isinstance(content, list):
                     media_group = []
-                    for media in content:
+                    for i, media in enumerate(content):
                         if media['type'] == 'photo':
                             media_group.append(InputMediaPhoto(media['file_id']))
-                        elif media['type'] == 'video':
+                        elif media['type'] in ['video', 'document']:
                             media_group.append(InputMediaVideo(media['file_id']))
                     
                     # Add caption to first media item
@@ -210,7 +234,7 @@ class Processor:
                             caption=caption,
                             parse_mode=ParseMode.MARKDOWN_V2
                         )
-                    elif media['type'] == 'video':
+                    elif media['type'] in ['video', 'document']:
                         await bot.send_video(
                             chat_id=target_id,
                             video=media['file_id'],

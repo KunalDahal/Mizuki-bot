@@ -1,10 +1,9 @@
 import asyncio
 import logging
 from mizuki_editor.monitor import ChannelMonitor
-from mizuki_editor.dup_ban import DupBanMonitor
-from mizuki_editor.post import handle_forwarded_message
+from mizuki_editor.checker import handle_forwarded_message
 from telegram.ext import Application, MessageHandler, filters
-from util import get_bot_token_2, get_dump_channel_id, get_target_channel, get_admin_ids
+from util import get_bot_token_2, get_admin_ids
 from mizuki_editor.sync import sync_channel_files
 
 logging.basicConfig(
@@ -44,13 +43,6 @@ async def run_bot():
             # Initialize and start monitor
             monitor = ChannelMonitor()
             monitor_task = asyncio.create_task(monitor.run())
-            
-            # Initialize DupBanMonitor
-            dup_ban_monitor = DupBanMonitor(
-                application=application,
-                dump_channel_id=get_dump_channel_id()
-            )
-            await dup_ban_monitor.start()
             
             # Add message handler for admin messages only
             admin_filter = filters.User(user_id=get_admin_ids())

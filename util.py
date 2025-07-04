@@ -59,11 +59,17 @@ def get_dump_channel_id() -> int:
     return int(channel_id)
 
 def get_target_channel() -> List[int]:
-    """Get list of target channels/groups"""
+    """Get all target channel IDs or raise an error if none exists."""
     if not os.path.exists(TARGET_FILE):
-        return []
+        raise ValueError("No target channel configured (file missing).")
+    
     with open(TARGET_FILE, 'r') as f:
-        return json.load(f)
+        channels = json.load(f)
+    
+    if not channels:
+        raise ValueError("No target channel configured (empty list).")
+    
+    return [int(channel) for channel in channels]  # Return all channels as integers
 
 def add_target_channel(channel_id: int):
     """Add new forward target"""
@@ -298,3 +304,11 @@ def get_admin_ids():
     """Get list of admin user IDs from environment"""
     admin_ids = os.getenv('ADMIN_IDS', '').split(',')
     return [int(id.strip()) for id in admin_ids if id.strip().isdigit()]
+
+def escape_markdown_v2(text: str) -> str:
+    if not text:
+        return ""
+    escape_chars = '_*[]()~`>#+-=|{}.!'
+    for char in escape_chars:
+        text = text.replace(char, '\\' + char)
+    return text
