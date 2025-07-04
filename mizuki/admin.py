@@ -8,9 +8,8 @@ from util import get_admin_ids
 logger = logging.getLogger(__name__)
 
 def admin_only(func):
-    @functools.wraps(func)  # Now using the fully qualified name
+    @functools.wraps(func)
     async def wrapper(update_or_self, context):
-        # Handle both standalone functions and class methods
         if isinstance(update_or_self, Update):
             update = update_or_self
         else:

@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from commands.admin import admin_only
+from mizuki.admin import admin_only
 from util import load_channels,save_channels
 
 @admin_only

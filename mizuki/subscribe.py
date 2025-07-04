@@ -3,7 +3,7 @@ from telegram.ext import ConversationHandler, CallbackContext
 from storage.config import OWNER_ID, BOT_TOKEN, load_subscriptions, save_subscriptions,SUBSCRIPTION_DAYS
 import logging
 from datetime import datetime, timedelta,date
-from commands.command_lock import acquire_lock,release_lock
+from mizuki.command_lock import acquire_lock,release_lock
 
 logger = logging.getLogger(__name__)
 bot = Bot(BOT_TOKEN)

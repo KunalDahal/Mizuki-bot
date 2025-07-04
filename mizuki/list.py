@@ -1,8 +1,8 @@
-# list.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
-from commands.admin import admin_only
-from util import load_banned_words, load_channels, load_remove_words, load_replace_words
+from mizuki.admin import admin_only
+from util import load_banned_words, load_channels, load_remove_words, load_replace_words,FORWARD_FILE
+import json
 import math
 
 ITEMS_PER_PAGE = 10
@@ -143,6 +143,31 @@ async def handle_list_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     keyboard = await create_pagination_buttons(page, total_pages, prefix)
     await query.edit_message_text(message, reply_markup=keyboard, parse_mode="HTML")
 
+@admin_only
+async def list_forward_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """List all forward groups with their links"""
+    try:
+        with open(FORWARD_FILE, 'r') as f:
+            forward_groups = json.load(f)
+        
+        if not forward_groups:
+            await update.message.reply_text("No forward groups found.")
+            return
+        
+        message = "📢 <b>Forward Groups</b>:\n\n"
+        for group_id in forward_groups:
+            try:
+                chat = await context.bot.get_chat(group_id)
+                message += f"• {chat.title} (ID: {group_id})\n"
+                message += f"   Link: {chat.invite_link or 'No link available'}\n\n"
+            except Exception as e:
+                message += f"• ID: {group_id} (Error fetching info: {str(e)})\n\n"
+        
+        await update.message.reply_text(message, parse_mode="HTML")
+    
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {str(e)}")
+
 def get_list_handlers():
     """Return all list command handlers"""
     return [
@@ -150,5 +175,6 @@ def get_list_handlers():
         CommandHandler("lc", list_channels),
         CommandHandler("lrm", list_remove),
         CommandHandler("lrp", list_replace),
+        CommandHandler("lf", list_forward_groups),  # New command
         CallbackQueryHandler(handle_list_callback, pattern=r"^(lb|lrm|lrp|lc):[0-9]+$")
     ]

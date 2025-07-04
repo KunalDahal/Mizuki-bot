@@ -1,7 +1,8 @@
 import re
 from telegram import Bot, InputMediaPhoto, InputMediaVideo
 from telegram.constants import ParseMode
-from util import load_remove_words, load_replace_words
+from util import load_remove_words, load_replace_words,get_bot_token_2
+import asyncio
 from deep_translator import GoogleTranslator
 import logging
 
@@ -166,3 +167,57 @@ class Processor:
         except Exception as e:
             logger.error(f"Forward error: {e}")
             return False
+    
+    async def forward_to_targets(self, content, target_ids):
+        bot = Bot(token=get_bot_token_2())  # Create bot instance
+        
+        for target_id in target_ids:
+            try:
+                # For media groups
+                if isinstance(content, list):
+                    media_group = []
+                    for media in content:
+                        if media['type'] == 'photo':
+                            media_group.append(InputMediaPhoto(media['file_id']))
+                        elif media['type'] == 'video':
+                            media_group.append(InputMediaVideo(media['file_id']))
+                    
+                    # Add caption to first media item
+                    if media_group and content[0].get('processed_caption'):
+                        media_group[0].caption = content[0]['processed_caption']
+                        media_group[0].parse_mode = ParseMode.MARKDOWN_V2
+                    
+                    await bot.send_media_group(
+                        chat_id=target_id,
+                        media=media_group
+                    )
+                
+                # For single messages
+                else:
+                    media = content[0]
+                    caption = media.get('processed_caption')
+                    
+                    if media['type'] == 'text':
+                        await bot.send_message(
+                            chat_id=target_id,
+                            text=caption,
+                            parse_mode=ParseMode.MARKDOWN_V2
+                        )
+                    elif media['type'] == 'photo':
+                        await bot.send_photo(
+                            chat_id=target_id,
+                            photo=media['file_id'],
+                            caption=caption,
+                            parse_mode=ParseMode.MARKDOWN_V2
+                        )
+                    elif media['type'] == 'video':
+                        await bot.send_video(
+                            chat_id=target_id,
+                            video=media['file_id'],
+                            caption=caption,
+                            parse_mode=ParseMode.MARKDOWN_V2
+                        )
+                
+                await asyncio.sleep(1)  # Rate limiting
+            except Exception as e:
+                logger.error(f"Forward error to {target_id}: {e}")

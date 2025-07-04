@@ -2,7 +2,7 @@ import os
 import sys
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from commands.admin import admin_only
+from mizuki.admin import admin_only
 import logging
 from util import CHANNEL_FILE, REMOVE_FILE, REPLACE_FILE,BAN_FILE,HASH_FILE
 import psutil

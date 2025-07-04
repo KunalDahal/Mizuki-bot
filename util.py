@@ -2,66 +2,115 @@ import os
 from dotenv import load_dotenv
 import json
 import random
-from typing import List,Union
+from typing import List, Union
+
 load_dotenv()
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Media size limits
-MAX_PHOTO_SIZE = 50_000_000       # 50MB
-MAX_VIDEO_SIZE = 150_000_000       # 150MB 
-VIDEO_HASH_CHUNK_SIZE = 2_000_000  # 2MB chunks
-VIDEO_HASH_SAMPLE_SIZE = 20_000_000 # 20MB to hash
+MAX_PHOTO_SIZE = 50_000_000 
+MAX_VIDEO_SIZE = 150_000_000  
+VIDEO_HASH_CHUNK_SIZE = 2_000_000  
+VIDEO_HASH_SAMPLE_SIZE = 20_000_000 
 
 JSON_FOLDER = "JSON"
 os.makedirs(JSON_FOLDER, exist_ok=True)
 
-USER_FILE=os.path.join(JSON_FOLDER, "users.json")
-REPLACE_FILE=os.path.join(JSON_FOLDER, "replace.json")
-REMOVE_FILE=os.path.join(JSON_FOLDER, "remove.json")
-CHANNEL_FILE = os.path.join(JSON_FOLDER, "channel_id.json")
+TARGET_FILE = os.path.join(JSON_FOLDER, "target_id.json")
+REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
+USER_FILE = os.path.join(JSON_FOLDER, "users.json")
+REPLACE_FILE = os.path.join(JSON_FOLDER, "replace.json")
+REMOVE_FILE = os.path.join(JSON_FOLDER, "remove.json")
+SOURCE_FILE = os.path.join(JSON_FOLDER, "source_id.json")
 HASH_FILE = os.path.join(JSON_FOLDER, "hash.json")
 BAN_FILE = os.path.join(JSON_FOLDER, "banned.json")
-MAX_HASH_ENTRIES = 500
+RECOVERY_FILE = os.path.join(JSON_FOLDER, "last_message_id.json")
+MAX_HASH_ENTRIES = 700
 
 # ensure list files
-for file in [BAN_FILE, CHANNEL_FILE, REMOVE_FILE, USER_FILE]:
+for file in [
+    BAN_FILE,
+    SOURCE_FILE,
+    REMOVE_FILE,
+    USER_FILE,
+    TARGET_FILE
+]:
     if not os.path.exists(file):
-        with open(file, 'w') as f:
+        with open(file, "w") as f:
             json.dump([], f)
 
 # ensure dict files
-for file in [REPLACE_FILE, HASH_FILE]:
+for file in [REPLACE_FILE, HASH_FILE, REQ_FILE,RECOVERY_FILE]:
     if not os.path.exists(file):
-        with open(file, 'w') as f:
+        with open(file, "w") as f:
             json.dump({}, f)
 
+# Add new constants
+
+
+# Add new functions
+def get_dump_channel_id() -> int:
+    """Get dump channel ID from environment"""
+    channel_id = os.getenv("DUMP_CHANNEL_ID")
+    if not channel_id:
+        raise ValueError("DUMP_CHANNEL_ID not found in .env file")
+    return int(channel_id)
+
+def get_target_channel() -> List[int]:
+    """Get list of target channels/groups"""
+    if not os.path.exists(TARGET_FILE):
+        return []
+    with open(TARGET_FILE, 'r') as f:
+        return json.load(f)
+
+def add_target_channel(channel_id: int):
+    """Add new forward target"""
+    channels = get_target_channel()
+    if channel_id not in channels:
+        channels.append(channel_id)
+        with open(TARGET_FILE, 'w') as f:
+            json.dump(channels, f)
+
+def remove_target_channel(channel_id: int):
+    """Remove forward target"""
+    channels = get_target_channel()
+    if channel_id in channels:
+        channels.remove(channel_id)
+        with open(TARGET_FILE, 'w') as f:
+            json.dump(channels, f)
+            
 # Load banned words
 def load_banned_words():
-    with open(BAN_FILE, 'r') as f:
+    with open(BAN_FILE, "r") as f:
         return json.load(f)
+
 
 # Save banned words
 def save_banned_words(words):
-    with open(BAN_FILE, 'w') as f:
+    with open(BAN_FILE, "w") as f:
         json.dump(words, f)
-        
+
+
 def load_remove_words() -> List[str]:
     try:
         # Create directory if it doesn't exist
         os.makedirs(JSON_FOLDER, exist_ok=True)
-        
+
         # Return empty list if file doesn't exist
         if not os.path.exists(REMOVE_FILE):
             return []
-            
+
         # Load and return words from file
-        with open(REMOVE_FILE, 'r', encoding='utf-8') as f:
+        with open(REMOVE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            
+
             # Support both array format and object with 'words' key
             if isinstance(data, list):
                 return data
-            return data.get('words', [])
-            
+            return data.get("words", [])
+
     except json.JSONDecodeError:
         # Handle corrupt JSON file
         print(f"Warning: {REMOVE_FILE} contains invalid JSON")
@@ -70,22 +119,41 @@ def load_remove_words() -> List[str]:
         # Log other errors and return empty list
         print(f"Error loading {REMOVE_FILE}: {e}")
         return []
-    
+
+
 def generate_post_id():
     return random.randint(10000, 99999)
 
+
 def save_remove_words(words):
     os.makedirs(JSON_FOLDER, exist_ok=True)
-    with open(REMOVE_FILE, 'w') as f:
+    with open(REMOVE_FILE, "w") as f:
         json.dump(words, f, indent=2)
-        
+
+
 def get_bot_token():
-    token = os.getenv('BOT_TOKEN_1')
+    token = os.getenv("BOT_TOKEN_1")
     if not token:
         raise ValueError("BOT_TOKEN not found in .env file")
     return token
+
+
 def get_bot_token_2():
-    token = os.getenv('BOT_TOKEN_2')
+    token = os.getenv("BOT_TOKEN_2")
+    if not token:
+        raise ValueError("BOT_TOKEN not found in .env file")
+    return token
+
+
+def get_bot_token_3():
+    token = os.getenv("BOT_TOKEN_3")
+    if not token:
+        raise ValueError("BOT_TOKEN not found in .env file")
+    return token
+
+
+def get_bot_token_4():
+    token = os.getenv("BOT_TOKEN_4")
     if not token:
         raise ValueError("BOT_TOKEN not found in .env file")
     return token
@@ -96,101 +164,95 @@ def load_replace_words():
     try:
         if not os.path.exists(REPLACE_FILE):
             return {}
-        
-        with open(REPLACE_FILE, 'r', encoding='utf-8') as f:
+
+        with open(REPLACE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         print(f"Error loading replace words: {e}")
         return {}
 
+
 def save_replace_words(replace_dict):
     """Save word replacements to JSON file"""
     try:
         os.makedirs(JSON_FOLDER, exist_ok=True)
-        with open(REPLACE_FILE, 'w', encoding='utf-8') as f:
+        with open(REPLACE_FILE, "w", encoding="utf-8") as f:
             json.dump(replace_dict, f, ensure_ascii=False, indent=2)
         return True
     except Exception as e:
         print(f"Error saving replace words: {e}")
         return False
 
+
 def get_hf_token():
-    token = os.getenv('HF_TOKEN')
+    token = os.getenv("HF_TOKEN")
     if not token:
         raise ValueError("HF_TOKEN not found in .env file")
     return token
 
+
 def get_api_id():
-    return int(os.getenv('API_ID'))
+    return int(os.getenv("API_ID"))
+
 
 def get_api_hash():
-    return os.getenv('API_HASH')
+    return os.getenv("API_HASH")
+
 
 def get_session_string():
-    session = os.getenv('SESSION_STRING')
+    session = os.getenv("SESSION_STRING")
     if not session:
         raise ValueError("SESSION_STRING not found in .env file")
     return session
 
+
 def get_session_name():
-    session = os.getenv('SESSION_NAME')
+    session = os.getenv("SESSION_NAME")
     if not session:
         raise ValueError("SESSION_NAME not found in .env file")
     return session
 
+
 def get_bot_username():
-    username = os.getenv('BOT_USERNAME')
+    username = os.getenv("BOT_USERNAME")
     if not username:
         raise ValueError("BOT_USERNAME not found in .env file")
-    return username.lstrip('@')
+    return username.lstrip("@")
 
-def get_moderation_channel_id():
-    channel_id = os.getenv('MODERATION_CHANNEL_ID')
-    if not channel_id:
-        raise ValueError("MODERATION_CHANNEL_ID not found in .env file")
-    return int(channel_id)
-
-def get_target_channel_id():
-    channel_id = os.getenv('TARGET_ID')
-    if not channel_id:
-        raise ValueError("TARGET_ID not found in .env file")
-    return int(channel_id)
 
 def load_channels():
-    if not os.path.exists(CHANNEL_FILE):
+    if not os.path.exists(SOURCE_FILE):
         return []
-    with open(CHANNEL_FILE, 'r') as f:
+    with open(SOURCE_FILE, "r") as f:
         data = json.load(f)
     return [int(cid) for cid in data]
 
+
 def save_channels(channel_list):
     os.makedirs(JSON_FOLDER, exist_ok=True)
-    with open(CHANNEL_FILE, 'w') as f:
+    with open(SOURCE_FILE, "w") as f:
         json.dump(channel_list, f, indent=2)
 
-def get_admin_ids():
-    ids = os.getenv('ADMIN_IDS', '')
-    return [int(id_str.strip()) for id_str in ids.split(',') if id_str.strip()]
 
 def load_users() -> List[str]:
     try:
 
         os.makedirs(JSON_FOLDER, exist_ok=True)
-        
+
         # Return empty list if file doesn't exist
         if not os.path.exists(USER_FILE):
             return []
-            
+
         # Load and validate existing data
-        with open(USER_FILE, 'r') as f:
+        with open(USER_FILE, "r") as f:
             users = json.load(f)
-            
+
             # Ensure we always return a list of strings
             if not isinstance(users, list):
                 raise ValueError("Invalid data format in user.json")
-                
+
             return [str(user_id) for user_id in users]
-            
+
     except (json.JSONDecodeError, ValueError) as e:
         print(f"Error loading user data: {e}")
         return []
@@ -198,29 +260,31 @@ def load_users() -> List[str]:
         print(f"Unexpected error loading users: {e}")
         return []
 
+
 def save_users(user_ids: List[Union[str, int]]) -> bool:
     try:
         # Convert all IDs to strings and remove duplicates
         unique_users = list({str(uid) for uid in user_ids})
-        
+
         # Create directory if it doesn't exist
         os.makedirs(JSON_FOLDER, exist_ok=True)
-        
+
         # Write to file with pretty formatting
-        with open(USER_FILE, 'w') as f:
+        with open(USER_FILE, "w") as f:
             json.dump(unique_users, f, indent=2, ensure_ascii=False)
-            
+
         return True
     except Exception as e:
         print(f"Error saving user data: {e}")
         return False
+
 
 def add_user(user_id: Union[str, int]) -> bool:
 
     try:
         users = load_users()
         user_str = str(user_id)
-        
+
         if user_str not in users:
             users.append(user_str)
             return save_users(users)
@@ -228,3 +292,9 @@ def add_user(user_id: Union[str, int]) -> bool:
     except Exception as e:
         print(f"Error adding user: {e}")
         return False
+    
+
+def get_admin_ids():
+    """Get list of admin user IDs from environment"""
+    admin_ids = os.getenv('ADMIN_IDS', '').split(',')
+    return [int(id.strip()) for id in admin_ids if id.strip().isdigit()]
