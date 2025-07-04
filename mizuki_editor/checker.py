@@ -272,6 +272,7 @@ class ContentChecker:
         
         # Process caption through text processor
         processed_caption = await self.processor.process(raw_caption)
+        logger.info(f"Processed caption for media group: {processed_caption[:100]}...")
         
         # Banned words check
         if self._contains_banned_words(processed_caption):
@@ -292,7 +293,6 @@ class ContentChecker:
         valid_files = []
         for media in all_media:
             if not await self._check_duplicates([media]):
-                media['processed_caption'] = processed_caption  # Add processed caption
                 valid_files.append(media)
                 logger.info(f"Added valid file: {media['file_id']}")
             else:
@@ -305,11 +305,11 @@ class ContentChecker:
         # Add non-duplicates to hash database
         await self._add_to_hash_data(processed_caption, valid_files)
         
-        # Forward the media group immediately
-        await self.forward_media_group(valid_files)
+        # Forward the media group with the processed caption
+        await self.forward_media_group(valid_files, processed_caption)
 
-    async def forward_media_group(self, media_list: List[Dict]):
-        """Forward a media group to all target channels"""
+    async def forward_media_group(self, media_list: List[Dict], caption: str):
+        """Forward a media group to all target channels with caption"""
         target_ids = get_target_channel()
         if not target_ids:
             logger.warning("No target channels configured")
@@ -328,12 +328,21 @@ class ContentChecker:
                         continue
                     
                     # Apply caption only to first item
-                    caption = item.get('processed_caption') if i == 0 else None
-                    parse_mode = ParseMode.MARKDOWN_V2 if caption else None
+                    if i == 0:
+                        # Use the processed caption we passed in
+                        media_caption = caption
+                        parse_mode = ParseMode.MARKDOWN_V2
+                    else:
+                        media_caption = None
+                        parse_mode = None
+                    
+                    # Truncate caption if too long (Telegram limit is 1024 chars)
+                    if media_caption and len(media_caption) > 1024:
+                        media_caption = media_caption[:1000] + "... [TRUNCATED]"
                     
                     media_group.append(media_type(
                         media=item['file_id'],
-                        caption=caption,
+                        caption=media_caption,
                         parse_mode=parse_mode
                     ))
                 
@@ -341,7 +350,7 @@ class ContentChecker:
                     chat_id=target_id,
                     media=media_group
                 )
-                logger.info(f"Successfully forwarded media group to channel {target_id}")
+                logger.info(f"Successfully forwarded media group with {len(media_list)} items to channel {target_id}")
             except Exception as e:
                 logger.error(f"Failed to forward media group to channel {target_id}: {e}")
 
