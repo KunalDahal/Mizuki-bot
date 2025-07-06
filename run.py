@@ -2,7 +2,7 @@ import asyncio
 import threading
 from mizuki_editor.mizuki_editor import MizukiEditor
 from mizuki.mizuki import main as mizuki_main
-from mizuki_editor.monitor import ChannelMonitor
+from monitor.monitor import ChannelMonitor
 
 def run_mizuki():
     mizuki_main()

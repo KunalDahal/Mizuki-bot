@@ -3,12 +3,12 @@ import logging
 import os
 import time
 from collections import deque
-from mizuki_editor.session import create_session
+from monitor.session import create_session
 from util import get_bot_username, load_channels, save_channels, SOURCE_FILE
 from telethon.errors import ChannelPrivateError, ChannelInvalidError, FloodWaitError
 import random
-from mizuki_editor.recovery import RecoverySystem
-from mizuki_editor.forward import Forwarder
+from monitor.recovery import RecoverySystem
+from monitor.forward import Forwarder
 
 
 logger = logging.getLogger(__name__)
