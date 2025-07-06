@@ -100,15 +100,21 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
                 logger.warning(f"Skipping large video ({file.file_size/1_000_000:.1f}MB)")
                 return media_hashes
                 
-            # Download entire video at once (simpler but uses more memory)
-            file_bytes = await file.download_as_bytearray()
+            # Download entire video at once
+            file_path = await file.download_to_drive()
+            
+            # Compute video hashes
+            video_hashes = compute_video_hashes(file_path)
             
             media_hashes.append({
                 'type': 'video',
-                'sha256': hashlib.sha256(file_bytes).hexdigest(),
-                'md5': hashlib.md5(file_bytes).hexdigest(),
+                'sha256': video_hashes['sha256'],
+                'md5': video_hashes['md5'],
                 'file_id': video.file_id
             })
+            
+            # Clean up temporary file
+            os.remove(file_path)
         except Exception as e:
             logger.error(f"Error processing video: {e}")
     
@@ -117,17 +123,27 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
 async def _add_to_hash_data(hash_data, caption: str, media_hashes: List[Dict]):
     """Add new media hashes to the hash database"""
     try:
-        if len(hash_data) >= MAX_HASH_ENTRIES:
-            oldest_key = next(iter(hash_data))
+        # Generate unique key using media hash instead of caption
+        media_keys = []
+        for media in media_hashes:
+            if media['type'] == 'photo':
+                key = media['phash']
+            else:
+                key = media['sha256']
+
+            media_keys.append(key)
+            hash_data[key] = {
+                'caption': caption,
+                'media': media,
+                'timestamp': int(time.time())
+            }
+        
+        # Maintain size limit
+        while len(hash_data) > MAX_HASH_ENTRIES:
+            oldest_key = min(hash_data, key=lambda k: hash_data[k]['timestamp'])
             hash_data.pop(oldest_key)
             logger.info(f"Removed oldest hash entry to maintain size limit")
         
-        new_key = hashlib.md5(caption.encode()).hexdigest() if caption else media_hashes[0]['sha256']
-        hash_data[new_key] = {
-            'caption': caption,
-            'media': media_hashes,
-            'timestamp': int(time.time())
-        }
         _save_hash_data(hash_data)
     except Exception as e:
         logger.error(f"Error adding to hash data: {e}")
