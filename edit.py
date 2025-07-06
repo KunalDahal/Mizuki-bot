@@ -1,16 +1,49 @@
-import asyncio
 import logging
-from mizuki_editor.monitor import ChannelMonitor
-from mizuki_editor.checker import handle_forwarded_message
-from telegram.ext import Application, MessageHandler, filters
+import asyncio
+from monitor.monitor import ChannelMonitor
+from mizuki_editor.main import handle_forwarded_message
+from telegram.ext import Application, MessageHandler, filters, CommandHandler,ContextTypes
 from util import get_bot_token_2, get_admin_ids
-from mizuki_editor.sync import sync_channel_files
+from monitor.sync import sync_channel_files
+from mizuki.admin import admin_only
+from telegram import Update
+from typing import Optional
+
+# Import the ContentChecker from our refactored module
+from mizuki_editor.content_checker import ContentChecker
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send a message when the command /start is issued."""
+    user = update.effective_user
+    await update.message.reply_text(f'Hi {user.first_name}! This is the Mizuki Editor bot.')
+
+@admin_only
+async def admin_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send admin help message"""
+    help_text = """
+    👨‍💻 *Admin Commands*:
+    /start - Start the bot
+    /help - Show this help message
+    
+    📤 *Usage*:
+    Forward messages or media to this bot:
+    - Single messages with text
+    - Single media with captions
+    - Media groups with captions
+    """
+    await update.message.reply_text(help_text, parse_mode='Markdown')
+
+async def error_handler(update: Optional[Update], context: ContextTypes.DEFAULT_TYPE):
+    """Log errors and handle them gracefully."""
+    logger.error(f'Update {update} caused error: {context.error}', exc_info=context.error)
+    if update and update.effective_message:
+        await update.effective_message.reply_text('An error occurred. Please try again.')
 
 async def run_bot():
     """Main bot running coroutine with restart capabilities"""
@@ -32,9 +65,8 @@ async def run_bot():
                 .write_timeout(30) \
                 .build()
             
-            # Store processor in bot_data
-            from mizuki_editor.processor import Processor
-            application.bot_data['processor'] = Processor()
+            # Initialize ContentChecker and store in bot_data
+            application.bot_data['content_checker'] = ContentChecker()
             application.bot_data['admin_ids'] = get_admin_ids()
             
             # Start channel file sync task
@@ -43,6 +75,10 @@ async def run_bot():
             # Initialize and start monitor
             monitor = ChannelMonitor()
             monitor_task = asyncio.create_task(monitor.run())
+            
+            # Add command handlers
+            application.add_handler(CommandHandler("start", start))
+            application.add_handler(CommandHandler("help", admin_help))
             
             # Add message handler for admin messages only
             admin_filter = filters.User(user_id=get_admin_ids())
@@ -53,6 +89,9 @@ async def run_bot():
                     handle_forwarded_message
                 )
             )
+            
+            # Add error handler
+            application.add_error_handler(error_handler)
             
             logger.info("Starting bot application...")
             await application.initialize()
@@ -81,7 +120,7 @@ async def run_bot():
             try:
                 if monitor:
                     monitor.running = False
-                    await asyncio.sleep(0.5)  # Give monitor time to stop
+                    await asyncio.sleep(0.5)
                 
                 if monitor_task:
                     monitor_task.cancel()
@@ -116,7 +155,6 @@ async def run_bot():
 async def main():
     """Main entry point with proper event loop handling"""
     try:
-        # Run the bot with proper cleanup
         await run_bot()
     except KeyboardInterrupt:
         logger.info("Application stopped by user")
@@ -126,7 +164,6 @@ async def main():
         logger.info("Application fully stopped")
 
 if __name__ == "__main__":
-    # Use asyncio.run() for proper event loop handling (Python 3.7+)
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

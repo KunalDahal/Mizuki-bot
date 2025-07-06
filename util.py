@@ -9,7 +9,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Media size limits
 MAX_PHOTO_SIZE = 50_000_000 
 MAX_VIDEO_SIZE = 150_000_000  
 VIDEO_HASH_CHUNK_SIZE = 2_000_000  
@@ -27,7 +26,7 @@ SOURCE_FILE = os.path.join(JSON_FOLDER, "source_id.json")
 HASH_FILE = os.path.join(JSON_FOLDER, "hash.json")
 BAN_FILE = os.path.join(JSON_FOLDER, "banned.json")
 RECOVERY_FILE = os.path.join(JSON_FOLDER, "last_message_id.json")
-MAX_HASH_ENTRIES = 700
+MAX_HASH_ENTRIES = 1000
 
 # ensure list files
 for file in [

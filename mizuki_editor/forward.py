@@ -1,7 +1,11 @@
 import logging
+import asyncio
+from telegram import InputMediaPhoto, InputMediaVideo
+from telegram.constants import ParseMode
+from typing import List, Dict
 from telethon.tl.types import MessageService
 from telethon.errors import FloodWaitError
-import asyncio
+from util import get_target_channel
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +31,7 @@ class Forwarder:
             return None
 
         try:
-            return await self.client.forward_messages(
-                self.bot_username,
-                message
-            )
+            return await self.client.forward_messages(self.bot_username, message)
         except FloodWaitError as e:
             logger.warning(f"Flood wait required: {e.seconds} seconds")
             await asyncio.sleep(e.seconds)
@@ -42,7 +43,9 @@ class Forwarder:
             return []
 
         # Filter out service messages
-        valid_messages = [msg for msg in messages if not isinstance(msg, MessageService)]
+        valid_messages = [
+            msg for msg in messages if not isinstance(msg, MessageService)
+        ]
 
         if not valid_messages:
             logger.debug("No valid messages in group")
@@ -50,17 +53,14 @@ class Forwarder:
 
         try:
             # Forward the entire group at once
-            return await self.client.forward_messages(
-                self.bot_username,
-                valid_messages
-            )
+            return await self.client.forward_messages(self.bot_username, valid_messages)
         except FloodWaitError as e:
             logger.warning(f"Flood wait required for group: {e.seconds} seconds")
             await asyncio.sleep(e.seconds)
             return await self._forward_group(messages)  # Retry
         except Exception as e:
             logger.error(f"Group forward failed: {e}")
-            
+
             # Fallback: try forwarding individually
             logger.info("Attempting individual forward as fallback")
             results = []
@@ -86,8 +86,73 @@ class Forwarder:
             except Exception as e:
                 logger.error(f"Forward attempt {attempt}/{max_retries} failed: {e}")
                 if attempt < max_retries:
-                    wait_time = min(2 ** attempt, 60)  # Exponential backoff
+                    wait_time = min(2**attempt, 60)  # Exponential backoff
                     await asyncio.sleep(wait_time)
-        
+
         logger.error(f"Failed to forward after {max_retries} attempts")
         return None
+
+async def forward_to_all_targets(
+    context, text: str = None, media: List[Dict] = None
+):
+    """Forward content to all target channels"""
+    target_ids = get_target_channel()
+    if not target_ids:
+        logger.warning("No target channels configured")
+        return
+
+    for target_id in target_ids:
+        try:
+            if text:
+                await context.bot.send_message(
+                    chat_id=target_id, text=text, parse_mode=ParseMode.MARKDOWN_V2
+                )
+            elif media:
+                # For single media items
+                if len(media) == 1:
+                    item = media[0]
+                    caption = item.get("processed_caption")
+                    parse_mode = ParseMode.MARKDOWN_V2 if caption else None
+
+                    if item["type"] == "photo":
+                        await context.bot.send_photo(
+                            chat_id=target_id,
+                            photo=item["file_id"],
+                            caption=caption,
+                            parse_mode=parse_mode,
+                        )
+                    elif item["type"] in ["video", "document"]:
+                        await context.bot.send_video(
+                            chat_id=target_id,
+                            video=item["file_id"],
+                            caption=caption,
+                            parse_mode=parse_mode,
+                        )
+                # For multiple media items (not a group)
+                else:
+                    media_group = []
+                    for i, item in enumerate(media):
+                        if item["type"] == "photo":
+                            media_type = InputMediaPhoto
+                        elif item["type"] in ["video", "document"]:
+                            media_type = InputMediaVideo
+                        else:
+                            continue
+
+                        # Apply caption only to first item
+                        caption = item.get("processed_caption") if i == 0 else None
+                        parse_mode = ParseMode.MARKDOWN_V2 if caption else None
+
+                        media_group.append(
+                            media_type(
+                                media=item["file_id"],
+                                caption=caption,
+                                parse_mode=parse_mode,
+                            )
+                        )
+
+                    await context.bot.send_media_group(
+                        chat_id=target_id, media=media_group
+                    )
+        except Exception as e:
+            logger.error(f"Failed to forward to channel {target_id}: {e}")
