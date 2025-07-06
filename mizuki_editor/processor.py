@@ -4,6 +4,7 @@ from typing import List, Dict, Optional, Union
 from telegram import Message
 from mizuki_editor.editor import Editor
 from util import get_admin_ids
+import imagehash
 from mizuki_editor.hash import _generate_media_hashes, _add_to_hash_data, _load_hash_data
 
 logger = logging.getLogger(__name__)
@@ -43,11 +44,15 @@ class Processor:
             return False
             
         for media in media_hashes:
-            for entry in self.hash_data.values():
-                for existing_media in entry['media']:
-                    if media['type'] == 'photo' and existing_media['type'] == 'photo':
-                        if media['phash'] == existing_media['phash']:
-                            return True
-                    if media['sha256'] == existing_media['sha256']:
-                        return True
+            # Generate the same key we use for storage
+            if media['type'] == 'photo':
+                media_key = media['phash']
+            else:
+                media_key = media['sha256']
+            
+            # Direct check if this exact media exists
+            if media_key in self.hash_data:
+                logger.info(f"Duplicate media detected: {media_key}")
+                return True
+
         return False

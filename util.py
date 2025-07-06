@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import json
+import re
 import random
 from typing import List, Union
 
@@ -305,9 +306,15 @@ def get_admin_ids():
     return [int(id.strip()) for id in admin_ids if id.strip().isdigit()]
 
 def escape_markdown_v2(text: str) -> str:
+    """Escape all special Markdown V2 characters"""
     if not text:
         return ""
-    escape_chars = '_*[]()~`>#+-=|{}.!'
-    for char in escape_chars:
-        text = text.replace(char, '\\' + char)
-    return text
+    
+    # List of special characters that need to be escaped in MarkdownV2
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    
+    # Create a regex pattern that matches any of the special characters
+    pattern = f'([{"".join(re.escape(c) for c in escape_chars)}])'
+    
+    # Replace each special character with its escaped version
+    return re.sub(pattern, r'\\\1', text)

@@ -121,12 +121,13 @@ class Editor:
         replaced = self.replace_words_in_text(removed.strip())
         summarized = self.summarize_text(replaced)
 
+        # Escape the entire content including footer
         main_text = escape_markdown_v2(summarized)
+        footer_text = escape_markdown_v2("@Mizuki_Newsbot")
+        
+        # Format with markdown
         formatted_text = f"_*{main_text}*_" if main_text else ""
-
-        # Footer only
-        footer_text = "@Mizuki_Newsbot"
-        footer_escaped = escape_markdown_v2(footer_text)
-        footer = f"\n\n> _*{footer_escaped}*_"
+        footer = f"\n\n> _*{footer_text}*_"
 
         return f"{formatted_text}{footer}"
+

@@ -105,16 +105,14 @@ class ContentChecker:
         valid_files = []
         for media in media_list:
             if not await self.processor._check_duplicates([media]):
+                media['processed_caption'] = processed_caption
                 valid_files.append(media)
         
         if not valid_files:
             logger.info("All media in group are duplicates - skipping")
             return
         
-        # Add to hash database (only add valid files)
-        for media in valid_files:
-            media['processed_caption'] = processed_caption
-        
+        # Add to hash database
         await self.processor._add_to_hash_data(self.hash_data, processed_caption, valid_files)
         
         # Forward to target channels
@@ -141,16 +139,11 @@ class ContentChecker:
                     
                     # Apply caption only to first item
                     if i == 0:
-                        # Properly escape special characters for MarkdownV2
-                        media_caption = caption.replace('.', r'\.').replace('-', r'\-').replace('!', r'\!')
+                        media_caption = caption
                         parse_mode = ParseMode.MARKDOWN_V2
                     else:
                         media_caption = None
                         parse_mode = None
-                    
-                    # Truncate caption if too long
-                    if media_caption and len(media_caption) > 1024:
-                        media_caption = media_caption[:1000] + "... [TRUNCATED]"
                     
                     media_group.append(media_type(
                         media=item['file_id'],
