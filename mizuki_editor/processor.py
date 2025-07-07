@@ -1,9 +1,8 @@
-
 import logging
 from typing import List, Dict, Optional, Union
 from telegram import Message
 from mizuki_editor.editor import Editor
-from util import get_admin_ids
+from util import get_admin_ids, get_dump_channel_id
 import imagehash
 from mizuki_editor.hash import _generate_media_hashes, _add_to_hash_data, _load_hash_data
 
@@ -44,6 +43,10 @@ class Processor:
             return False
             
         for media in media_hashes:
+            # Skip skipped media (large files)
+            if media.get('skipped'):
+                continue
+                
             # Generate the same key we use for storage
             if media['type'] == 'photo':
                 media_key = media['phash']
