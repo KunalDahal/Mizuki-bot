@@ -150,21 +150,6 @@ def get_bot_token_2():
         raise ValueError("BOT_TOKEN not found in .env file")
     return token
 
-
-def get_bot_token_3():
-    token = os.getenv("BOT_TOKEN_3")
-    if not token:
-        raise ValueError("BOT_TOKEN not found in .env file")
-    return token
-
-
-def get_bot_token_4():
-    token = os.getenv("BOT_TOKEN_4")
-    if not token:
-        raise ValueError("BOT_TOKEN not found in .env file")
-    return token
-
-
 def load_replace_words():
     """Load word replacements from JSON file"""
     try:

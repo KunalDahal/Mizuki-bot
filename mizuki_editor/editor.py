@@ -130,4 +130,3 @@ class Editor:
         footer = f"\n\n> _*{footer_text}*_"
 
         return f"{formatted_text}{footer}"
-

@@ -25,8 +25,8 @@ def compute_video_hashes(video_path: str) -> Dict[str, str]:
         md5_hash = hashlib.md5()
         sha256_hash = hashlib.sha256()
 
-        for time, img in clip.iter_frames(fps=2, with_times=True):
-            if time > end_time:
+        for t, img in clip.iter_frames(fps=2, with_times=True):
+            if t > end_time:
                 break
 
             frame_bytes = img.tobytes()
@@ -66,16 +66,22 @@ def _save_hash_data(hash_data):
 async def _generate_media_hashes(message: Message) -> List[Dict]:
     """Generate hashes for media content with 20MB size limit"""
     media_hashes = []
+    FILE_SIZE_LIMIT = 20_000_000  # 20MB
     
     if message.photo:
         try:
             largest_photo = message.photo[-1]
-            file = await largest_photo.get_file()
-            
-            # Updated to 20MB limit (Telegram Bot API limit)
-            if file.file_size and file.file_size > 20_000_000:
+            try:
+                file = await largest_photo.get_file()
+            except Exception as e:
+                if "too big" in str(e).lower():
+                    logger.warning("Skipping large photo (over 20MB)")
+                    return [{'type': 'photo', 'skipped': True, 'file_id': largest_photo.file_id}]
+                raise
+
+            if file.file_size and file.file_size > FILE_SIZE_LIMIT:
                 logger.warning(f"Skipping large photo ({file.file_size/1_000_000:.1f}MB)")
-                return media_hashes
+                return [{'type': 'photo', 'skipped': True, 'file_id': largest_photo.file_id}]
                 
             file_bytes = await file.download_as_bytearray()
             
@@ -93,12 +99,17 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
     elif message.video:
         try:
             video = message.video
-            file = await video.get_file()
-            
-            # Updated to 20MB limit (Telegram Bot API limit)
-            if file.file_size and file.file_size > 20_000_000:
+            try:
+                file = await video.get_file()
+            except Exception as e:
+                if "too big" in str(e).lower():
+                    logger.warning("Skipping large video (over 20MB)")
+                    return [{'type': 'video', 'skipped': True, 'file_id': video.file_id}]
+                raise
+
+            if file.file_size and file.file_size > FILE_SIZE_LIMIT:
                 logger.warning(f"Skipping large video ({file.file_size/1_000_000:.1f}MB)")
-                return media_hashes
+                return [{'type': 'video', 'skipped': True, 'file_id': video.file_id}]
                 
             # Download entire video at once
             file_path = await file.download_to_drive()
@@ -126,6 +137,10 @@ async def _add_to_hash_data(hash_data, caption: str, media_hashes: List[Dict]):
         # Generate unique key using media hash instead of caption
         media_keys = []
         for media in media_hashes:
+            # Skip skipped media (large files)
+            if media.get('skipped'):
+                continue
+                
             if media['type'] == 'photo':
                 key = media['phash']
             else:

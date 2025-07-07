@@ -1,10 +1,11 @@
+
 import logging
 import asyncio
 from typing import List, Dict, Optional, Union
 from collections import defaultdict
 from telegram import Bot, InputMediaPhoto, InputMediaVideo, Message
 from telegram.constants import ParseMode
-from util import get_target_channel, get_bot_token_2, load_banned_words
+from util import get_target_channel, get_bot_token_2, load_banned_words, get_dump_channel_id
 from mizuki_editor.hash import _load_hash_data
 from mizuki_editor.processor import Processor
 from mizuki_editor.editor import Editor
@@ -19,6 +20,7 @@ class ContentChecker:
         self.bot = Bot(token=get_bot_token_2())
         self.processor = Processor(self.hash_data, self.banned_words, self)
         self.editor = Editor()
+        self.dump_channel = get_dump_channel_id()
     
     def _contains_banned_words(self, text: str) -> bool:
         """Check if text contains any banned words"""
@@ -45,12 +47,21 @@ class ContentChecker:
         # Process caption through text processor
         processed_caption = await self.editor.process(caption)
         
-        # Banned words check
+        # Banned words check - forward to dump channel
         if self._contains_banned_words(processed_caption):
-            logger.warning("Message contains banned words - skipping")
+            logger.warning("Message contains banned words - forwarding to dump channel")
+            await self.forward_to_dump_channel([message], processed_caption)
             return None
         
         media_hashes = await self.processor._generate_media_hashes(message)
+        
+        # Handle large media - forward to dump channel
+        large_media = [m for m in media_hashes if m.get('skipped')]
+        if large_media:
+            logger.warning("Large media detected - forwarding to dump channel")
+            await self.forward_to_dump_channel([message], processed_caption)
+            # Return early since we don't want to process duplicates for large media
+            return None
         
         # Handle text-only messages
         if not media_hashes and message.text:
@@ -83,25 +94,46 @@ class ContentChecker:
         # Get caption from first message that has one
         caption = next((msg.caption for msg in messages if msg.caption), "")
         
-        # Process all media in the group
-        media_list = []
-        for msg in messages:
-            media_hashes = await self.processor._generate_media_hashes(msg)
-            if media_hashes:
-                media_list.extend(media_hashes)
-        
-        if not media_list:
-            return
-        
         # Process caption through text processor
         processed_caption = await self.editor.process(caption)
         
-        # Banned words check
+        # Banned words check - forward to dump channel
         if self._contains_banned_words(processed_caption):
-            logger.warning("Media group contains banned words - skipping")
+            logger.warning("Media group contains banned words - forwarding to dump channel")
+            await self.forward_to_dump_channel(messages, processed_caption)
             return
         
-        # Check for duplicates
+        # Process all media in the group
+        media_list = []
+        large_media_files = []
+        for msg in messages:
+            media_hashes = await self.processor._generate_media_hashes(msg)
+            for media in media_hashes:
+                if media.get('skipped'):
+                    large_media_files.append(media)
+                else:
+                    media_list.append(media)
+        
+        # Forward large media to dump channel
+        if large_media_files:
+            logger.warning("Large media detected in group - forwarding to dump channel")
+            # Find messages containing large media
+            large_media_messages = []
+            for msg in messages:
+                for media in large_media_files:
+                    if media['file_id'] in [p.file_id for p in msg.photo] or \
+                       (msg.video and msg.video.file_id == media['file_id']):
+                        large_media_messages.append(msg)
+                        break
+            
+            await self.forward_to_dump_channel(large_media_messages, processed_caption)
+        
+        # If no non-large media left, return
+        if not media_list:
+            logger.info("No non-large media left in the group")
+            return
+        
+        # Check for duplicates in non-large media
         valid_files = []
         for media in media_list:
             if not await self.processor._check_duplicates([media]):
@@ -109,13 +141,13 @@ class ContentChecker:
                 valid_files.append(media)
         
         if not valid_files:
-            logger.info("All media in group are duplicates - skipping")
+            logger.info("All non-large media in group are duplicates - skipping")
             return
         
         # Add to hash database
         await self.processor._add_to_hash_data(self.hash_data, processed_caption, valid_files)
         
-        # Forward to target channels
+        # Forward non-large media to target channels
         await self.forward_media_group(valid_files, processed_caption)
 
     async def forward_media_group(self, media_list: List[Dict], caption: str):
@@ -158,3 +190,76 @@ class ContentChecker:
                 logger.info(f"Successfully forwarded media group with {len(media_list)} items to channel {target_id}")
             except Exception as e:
                 logger.error(f"Failed to forward media group to channel {target_id}: {e}")
+    
+    async def forward_to_dump_channel(self, messages: List[Message], caption: str):
+        """Forward messages to dump channel with formatted caption"""
+        if not self.dump_channel:
+            logger.warning("No dump channel configured")
+            return
+            
+        try:
+            if len(messages) == 1:
+                msg = messages[0]
+                if msg.text:
+                    await self.bot.send_message(
+                        chat_id=self.dump_channel,
+                        text=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.photo:
+                    await self.bot.send_photo(
+                        chat_id=self.dump_channel,
+                        photo=msg.photo[-1].file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.video:
+                    await self.bot.send_video(
+                        chat_id=self.dump_channel,
+                        video=msg.video.file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.document:
+                    await self.bot.send_document(
+                        chat_id=self.dump_channel,
+                        document=msg.document.file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+            else:
+                media_group = []
+                for i, msg in enumerate(messages):
+                    if msg.photo:
+                        media_type = InputMediaPhoto
+                        media_id = msg.photo[-1].file_id
+                    elif msg.video:
+                        media_type = InputMediaVideo
+                        media_id = msg.video.file_id
+                    elif msg.document:
+                        media_type = InputMediaVideo  # Telegram doesn't have InputMediaDocument
+                        media_id = msg.document.file_id
+                    else:
+                        continue
+                    
+                    # Apply caption only to first item
+                    if i == 0:
+                        media_caption = caption
+                        parse_mode = ParseMode.MARKDOWN_V2
+                    else:
+                        media_caption = None
+                        parse_mode = None
+                    
+                    media_group.append(media_type(
+                        media=media_id,
+                        caption=media_caption,
+                        parse_mode=parse_mode
+                    ))
+                
+                await self.bot.send_media_group(
+                    chat_id=self.dump_channel,
+                    media=media_group
+                )
+                logger.info(f"Forwarded media group with {len(media_group)} items to dump channel")
+        except Exception as e:
+            logger.error(f"Failed to forward to dump channel: {e}")
