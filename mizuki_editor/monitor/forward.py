@@ -2,6 +2,7 @@ import logging
 from telethon.tl.types import MessageService
 from telethon.errors import FloodWaitError
 import asyncio
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,10 @@ class Forwarder:
             )
         except FloodWaitError as e:
             logger.warning(f"Flood wait required: {e.seconds} seconds")
-            await asyncio.sleep(e.seconds)
-            return await self._forward_single(message)  # Retry
+            raise
+        except Exception as e:
+            logger.error(f"Forwarding error: {e}")
+            raise
 
     async def _forward_group(self, messages):
         """Forward a media group while preserving its structure"""
@@ -53,11 +56,10 @@ class Forwarder:
             )
         except FloodWaitError as e:
             logger.warning(f"Flood wait required for group: {e.seconds} seconds")
-            await asyncio.sleep(e.seconds)
-            return await self._forward_group(messages)  # Retry
+            raise
         except Exception as e:
             logger.error(f"Group forward failed: {e}")
-            
+            # Fallback to individual forwarding
             logger.info("Attempting individual forward as fallback")
             results = []
             for msg in valid_messages:
@@ -70,7 +72,7 @@ class Forwarder:
             return results
 
     async def forward_with_retry(self, messages, max_retries=3):
-        """Forward messages with retry logic"""
+        """Forward messages with retry logic and jitter"""
         if not isinstance(messages, list):
             messages = [messages]
 
@@ -79,11 +81,14 @@ class Forwarder:
                 if len(messages) > 1:
                     return await self._forward_group(messages)
                 return await self._forward_single(messages[0])
+            except FloodWaitError as e:
+                wait_time = e.seconds + random.uniform(1, 5)
+                logger.warning(f"Flood wait: Retry {attempt}/{max_retries} in {wait_time}s")
+                await asyncio.sleep(wait_time)
             except Exception as e:
-                logger.error(f"Forward attempt {attempt}/{max_retries} failed: {e}")
-                if attempt < max_retries:
-                    wait_time = min(2 ** attempt, 60) 
-                    await asyncio.sleep(wait_time)
+                logger.error(f"Forward error: {e}")
+                wait_time = min(2 ** attempt, 60) * random.uniform(0.8, 1.2)
+                await asyncio.sleep(wait_time)
         
         logger.error(f"Failed to forward after {max_retries} attempts")
         return None

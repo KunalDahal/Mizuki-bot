@@ -1,5 +1,4 @@
 import logging
-import asyncio
 from telegram import InputMediaPhoto, InputMediaVideo
 from telegram.constants import ParseMode
 from typing import List, Dict

@@ -2,14 +2,13 @@ import asyncio
 import logging
 import os
 import time
-from collections import deque
+import random
+from collections import deque, defaultdict
 from monitor.session import create_session
 from util import get_bot_username, load_channels, save_channels, SOURCE_FILE
 from telethon.errors import ChannelPrivateError, ChannelInvalidError, FloodWaitError
-import random
 from monitor.recovery import RecoverySystem
 from monitor.forward import Forwarder
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +23,33 @@ class ChannelMonitor:
         self.forward_attempts = {} 
         self.processing_semaphore = asyncio.Semaphore(1) 
         self.base_delay = 30 
-        self.channel_check_jitter = (0, 10)  # For spacing between channel checks
-        self.queue_delay_jitter = (0, 30)    # Jitter for forwarding delay (0-30s)
+        self.channel_check_jitter = (0, 10)
+        self.queue_delay_jitter = (0, 30)
         self.last_channel_file_check = 0
-        self.channel_file_check_interval = 10  # Check every 5 minutes
+        self.channel_file_check_interval = 300
+        
+        # Backoff parameters
+        self.channel_backoffs = defaultdict(float)
+        self.min_backoff = 5
+        self.max_backoff = 3600
+        self.backoff_factor = 1.5
         
         # Initialize missing attributes
-        self.recovery = RecoverySystem()  # Add recovery system
-        self.queue_lock = asyncio.Lock()  # Add queue lock
-        self.message_queue = deque()  # Add message queue
+        self.recovery = RecoverySystem()
+        self.queue_lock = asyncio.Lock()
+        self.message_queue = deque()
+
+        # Start backoff decay task
+        asyncio.create_task(self.backoff_decay())
+
+    async def backoff_decay(self):
+        """Periodically reduce backoff times"""
+        while self.running:
+            await asyncio.sleep(3600)  # Every hour
+            for channel_id in list(self.channel_backoffs):
+                self.channel_backoffs[channel_id] *= 0.8
+                if self.channel_backoffs[channel_id] < self.min_backoff:
+                    del self.channel_backoffs[channel_id]
 
     async def run(self):
         self.running = True
@@ -158,11 +175,16 @@ class ChannelMonitor:
         try:
             entity = await self.client.get_entity(channel_id)
             
+            # Dynamic batch sizing based on queue length
+            async with self.queue_lock:
+                queue_size = len(self.message_queue)
+            max_messages = 5 if queue_size > 20 else 100
+            
             messages = await self.client.get_messages(
                 entity,
-                limit=100,
+                limit=max_messages,
                 min_id=last_id,
-                reverse=True  # Get newest messages first
+                reverse=True
             )
             new_messages = [msg for msg in messages if msg.id > last_id]
             
@@ -180,9 +202,7 @@ class ChannelMonitor:
                     else:
                         single.append(msg)
                 
-                
                 async with self.queue_lock:
-                  
                     for group in grouped.values():
                         self.message_queue.append((channel_id, group))
                     
@@ -194,53 +214,8 @@ class ChannelMonitor:
             logger.error(f"Error checking channel {channel_id}: {e}")
             raise
             
-    async def forward_with_retry(self, forward_func, messages, description):
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                await forward_func(messages)
-                logger.info(f"Successfully forwarded {description}")
-                return True
-            except FloodWaitError as e:
-                wait_time = e.seconds + random.uniform(1, 5)
-                logger.warning(f"Flood wait for {description}, attempt {attempt + 1}/{max_retries}. Waiting {wait_time} seconds")
-                await asyncio.sleep(wait_time)
-            except Exception as e:
-                logger.error(f"Failed to forward {description}, attempt {attempt + 1}/{max_retries}: {e}")
-                await asyncio.sleep(random.uniform(*self.channel_check_jitter))
-        
-        logger.error(f"Failed to forward {description} after {max_retries} attempts")
-        return False
-
-    async def forward_message(self, message):
-        jitter = random.uniform(*self.channel_check_jitter)
-        await asyncio.sleep(jitter)
-        await self.client.forward_messages(self.bot_username, message)
-
-    async def forward_message_group(self, messages):
-        jitter = random.uniform(*self.channel_check_jitter)
-        await asyncio.sleep(jitter)
-        await self.client.forward_messages(self.bot_username, messages)
-    
-    async def _forward_messages(self, channel_id, messages):
-        try:
-            logger.info(f"Attempting to forward {len(messages)} messages from {channel_id}")
-            if len(messages) > 1:
-                await self.forward_message_group(messages)
-            else:
-                await self.forward_message(messages[0])
-            
-            if messages:
-                last_id = max(m.id for m in messages)
-                logger.info(f"Updating recovery state for {channel_id} to {last_id}")
-                self.recovery.update_channel_state(channel_id, last_id)
-                
-        except Exception as e:
-            logger.error(f"Error forwarding messages: {e}")
-            raise
-    
     async def _process_queue(self):
-        """Process messages from the queue with delays"""
+        """Process messages from the queue with delays and backoffs"""
         while self.running:  
             async with self.queue_lock:
                 if not self.message_queue:
@@ -248,6 +223,17 @@ class ChannelMonitor:
                     continue
                 
                 channel_id, messages = self.message_queue.popleft()
+                
+            # Check if channel is in backoff
+            current_time = time.time()
+            backoff_end = self.channel_backoffs.get(channel_id, 0)
+            if current_time < backoff_end:
+                wait_time = backoff_end - current_time
+                logger.info(f"Channel {channel_id} in backoff, waiting {wait_time:.1f}s")
+                await asyncio.sleep(wait_time)
+                async with self.queue_lock:
+                    self.message_queue.appendleft((channel_id, messages))
+                continue
                 
             try:
                 jitter = random.uniform(*self.queue_delay_jitter)
@@ -259,13 +245,22 @@ class ChannelMonitor:
                 result = await forwarder.forward_with_retry(messages)
                 
                 if not result:
+                    # Update backoff on failure
+                    current_backoff = self.channel_backoffs.get(channel_id, self.min_backoff)
+                    new_backoff = min(current_backoff * self.backoff_factor, self.max_backoff)
+                    self.channel_backoffs[channel_id] = current_time + new_backoff
+                    logger.warning(f"Set backoff for channel {channel_id}: {new_backoff:.1f}s")
+                    
                     async with self.queue_lock:
                         self.message_queue.appendleft((channel_id, messages))
-                        await asyncio.sleep(60) 
+                else:
+                    # Update recovery state on success
+                    if messages:
+                        last_id = max(m.id for m in messages)
+                        self.recovery.update_channel_state(channel_id, last_id)
                 
             except Exception as e:
                 logger.error(f"Error processing queue item: {e}")
-              
                 async with self.queue_lock:
                     self.message_queue.appendleft((channel_id, messages))
-                    await asyncio.sleep(60)
+                await asyncio.sleep(10)

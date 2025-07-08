@@ -156,8 +156,8 @@ class Editor:
         main_text = escape_markdown_v2(summarized)
         footer_text = escape_markdown_v2("💠 ~ @Animes_News_Ocean")
 
-        header = "> _*@Mizuki\\_Newsbot*_\n\n"
-        header_new=f"||{header}||"
+        header = "> _*@Mizuki\\_Newsbot*_"
+        header_new=f"||{header}||\n\n"
         
         if not has_original_emojis and main_text:
             main_text = f"❄️{main_text}"

@@ -16,11 +16,16 @@ def load_upvotes() -> Dict[str, Any]:
             return {"count": 0, "users": {}}
         
         with open(UPVOTE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            if "users" not in data:
+                data["users"] = {}
+            if "count" not in data:
+                data["count"] = 0
+            return data
     except Exception as e:
         print(f"Error loading upvote data: {e}")
         return {"count": 0, "users": {}}
-
+    
 def save_upvotes(data: Dict[str, Any]) -> bool:
     """Save upvote data to JSON file"""
     try:

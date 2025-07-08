@@ -1,10 +1,10 @@
 import logging
 import asyncio
-from monitor.monitor import ChannelMonitor
+from mizuki_editor.monitor.monitor import ChannelMonitor
 from mizuki_editor.main import handle_forwarded_message
 from telegram.ext import Application, MessageHandler, filters, CommandHandler,ContextTypes
 from util import get_bot_token_2, get_admin_ids
-from monitor.sync import sync_channel_files
+from mizuki_editor.monitor.sync import sync_channel_files
 from mizuki.admin import admin_only
 from telegram import Update
 from typing import Optional

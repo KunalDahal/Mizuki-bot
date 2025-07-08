@@ -2,7 +2,7 @@ import os
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from util import get_admin_ids,JSON_FOLDER,REQ_FILE,FORWARD_FILE
+from util import get_admin_ids,JSON_FOLDER,REQ_FILE,TARGET_FILE
 
 async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -28,12 +28,12 @@ async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         group_id = requests[user_id]["group_id"]
 
-        with open(FORWARD_FILE, 'r') as f:
+        with open(TARGET_FILE, 'r') as f:
             forward_list = json.load(f)
         
         if group_id not in forward_list:
             forward_list.append(group_id)
-            with open(FORWARD_FILE, 'w') as f:
+            with open(TARGET_FILE, 'w') as f:
                 json.dump(forward_list, f, indent=2)
         
         del requests[user_id]
