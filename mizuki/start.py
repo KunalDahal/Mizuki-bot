@@ -6,10 +6,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command and store user ID"""
     user = update.effective_user
     
-    # Load existing users
     users = load_users()
     
-    # Add new user if not already present
     if str(user.id) not in users:
         users.append(str(user.id))
         save_users(users)

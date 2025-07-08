@@ -1,10 +1,9 @@
 import json
 import logging
 import os
-import asyncio
 from typing import Dict, Optional
 from telethon import TelegramClient
-from telethon.tl.types import Message, MessageService
+from telethon.tl.types import MessageService
 from telethon.errors import ChannelPrivateError
 from util import RECOVERY_FILE, get_target_channel
 
@@ -21,7 +20,7 @@ class RecoverySystem:
             if os.path.exists(RECOVERY_FILE):
                 with open(RECOVERY_FILE, 'r') as f:
                     data = json.load(f)
-                    # Convert keys to integers
+                 
                     self.last_message_ids = {int(k): v for k, v in data.items()}
                 logger.info(f"Loaded recovery data for {len(self.last_message_ids)} channels")
         except Exception as e:
@@ -41,7 +40,6 @@ class RecoverySystem:
         """Update the last processed message ID for a channel"""
         current_last = self.last_message_ids.get(channel_id, 0)
         
-        # Only update if new ID is higher
         if last_message_id > current_last:
             self.last_message_ids[channel_id] = last_message_id
             self.save_recovery_data()
@@ -57,15 +55,14 @@ class RecoverySystem:
             try:
                 entity = await client.get_entity(channel_id)
                 
-                # Get the last 10 messages to account for media groups
                 messages = await client.get_messages(
                     entity, 
                     limit=10,
-                    reverse=True  # Get newest messages first
+                    reverse=True  
                 )
                 
                 if messages:
-                    # Filter out service messages
+                 
                     valid_messages = [msg for msg in messages if not isinstance(msg, MessageService)]
                     
                     if valid_messages:
@@ -86,14 +83,13 @@ class RecoverySystem:
                 self.update_channel_state(channel_id, 0)
             except Exception as e:
                 logger.error(f"Error initializing channel {channel_id}: {e}")
-                # Initialize with 0 if we can't access the channel
+    
                 self.update_channel_state(channel_id, 0)
 
     async def recover_channels(self, client: TelegramClient):
         """Recover all channels by reinitializing their states"""
         logger.info("Starting channel recovery process")
-        
-        # Get current target channels
+ 
         target_channels = get_target_channel()
         if not target_channels:
             logger.warning("No target channels configured for recovery")
@@ -101,10 +97,9 @@ class RecoverySystem:
             
         for channel_id in target_channels:
             try:
-                # Reinitialize each channel
+            
                 await self.initialize_channel_state(client, channel_id)
                 
-                # Verify state
                 current_id = self.get_last_message_id(channel_id)
                 logger.info(f"Recovered channel {channel_id} with last ID: {current_id}")
             except Exception as e:

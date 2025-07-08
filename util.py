@@ -18,7 +18,10 @@ VIDEO_HASH_SAMPLE_SIZE = 20_000_000
 JSON_FOLDER = "JSON"
 os.makedirs(JSON_FOLDER, exist_ok=True)
 
-TARGET_FILE = os.path.join(JSON_FOLDER, "target_id.json")
+TARGET_FILE = os.path.join(JSON_FOLDER, "ano_id.json")
+UPVOTE_FILE = os.path.join(JSON_FOLDER, "upvote.json")
+SYMBOL_FILE = os.path.join(JSON_FOLDER, "symbol.json")
+EMOJI_FILE = os.path.join(JSON_FOLDER, "emoji.json")
 REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
 USER_FILE = os.path.join(JSON_FOLDER, "users.json")
 REPLACE_FILE = os.path.join(JSON_FOLDER, "replace.json")
@@ -35,22 +38,19 @@ for file in [
     SOURCE_FILE,
     REMOVE_FILE,
     USER_FILE,
-    TARGET_FILE
+    TARGET_FILE,
+    SYMBOL_FILE
 ]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump([], f)
 
 # ensure dict files
-for file in [REPLACE_FILE, HASH_FILE, REQ_FILE,RECOVERY_FILE]:
+for file in [REPLACE_FILE, HASH_FILE, REQ_FILE,RECOVERY_FILE,EMOJI_FILE,UPVOTE_FILE]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump({}, f)
 
-# Add new constants
-
-
-# Add new functions
 def get_dump_channel_id() -> int:
     """Get dump channel ID from environment"""
     channel_id = os.getenv("DUMP_CHANNEL_ID")
@@ -59,7 +59,6 @@ def get_dump_channel_id() -> int:
     return int(channel_id)
 
 def get_target_channel() -> List[int]:
-    """Get all target channel IDs or raise an error if none exists."""
     if not os.path.exists(TARGET_FILE):
         raise ValueError("No target channel configured (file missing).")
     
@@ -196,6 +195,20 @@ def get_session_string():
         raise ValueError("SESSION_STRING not found in .env file")
     return session
 
+def get_api_id_1():
+    return int(os.getenv("API_ID"))
+
+
+def get_api_hash_1():
+    return os.getenv("API_HASH")
+
+
+def get_session_string_1():
+    session = os.getenv("SESSION_STRING")
+    if not session:
+        raise ValueError("SESSION_STRING not found in .env file")
+    return session
+
 
 def get_session_name():
     session = os.getenv("SESSION_NAME")
@@ -303,3 +316,25 @@ def escape_markdown_v2(text: str) -> str:
     
     # Replace each special character with its escaped version
     return re.sub(pattern, r'\\\1', text)
+
+def load_emoji_replacements():
+    """Load emoji replacements from JSON file"""
+    try:
+        if os.path.exists(EMOJI_FILE):
+            with open(EMOJI_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
+    except Exception as e:
+        logger.error(f"Failed to load emoji replacements: {e}")
+        return {}
+    
+def load_preserve_symbols() -> List[str]:
+    """Load symbols to preserve during emoji removal"""
+    try:
+        if not os.path.exists(SYMBOL_FILE):
+            return []
+        with open(SYMBOL_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load preserve symbols: {e}")
+        return []

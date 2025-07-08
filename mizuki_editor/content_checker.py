@@ -33,7 +33,7 @@ class ContentChecker:
     async def process_message(self, message: Message) -> Optional[Union[List[Dict], str]]:
         """Process a single message or add to media group cache"""
         if message.media_group_id:
-            # Add to media group cache and process if first in group
+       
             self.media_group_cache[message.media_group_id].append(message)
             if len(self.media_group_cache[message.media_group_id]) == 1:
                 asyncio.create_task(self._process_complete_media_group(message.media_group_id))
@@ -44,10 +44,8 @@ class ContentChecker:
         """Process a single message (not part of a media group)"""
         caption = message.caption or message.text or ""
         
-        # Process caption through text processor
         processed_caption = await self.editor.process(caption)
         
-        # Banned words check - forward to dump channel
         if self._contains_banned_words(processed_caption):
             logger.warning("Message contains banned words - forwarding to dump channel")
             await self.forward_to_dump_channel([message], processed_caption)
@@ -55,19 +53,16 @@ class ContentChecker:
         
         media_hashes = await self.processor._generate_media_hashes(message)
         
-        # Handle large media - forward to dump channel
         large_media = [m for m in media_hashes if m.get('skipped')]
         if large_media:
             logger.warning("Large media detected - forwarding to dump channel")
             await self.forward_to_dump_channel([message], processed_caption)
-            # Return early since we don't want to process duplicates for large media
+         
             return None
         
-        # Handle text-only messages
         if not media_hashes and message.text:
             return processed_caption
         
-        # Check for duplicates
         valid_files = []
         for media in media_hashes:
             if not await self.processor._check_duplicates([media]):
@@ -78,32 +73,27 @@ class ContentChecker:
             logger.info("No valid files after duplicate check")
             return None
         
-        # Add to hash database
         await self.processor._add_to_hash_data(self.hash_data, processed_caption, valid_files)
         
         return valid_files
 
     async def _process_complete_media_group(self, group_id: str):
         """Process a complete media group after all parts are received"""
-        await asyncio.sleep(2)  # Wait for all parts to arrive
+        await asyncio.sleep(2) 
         
         messages = self.media_group_cache.pop(group_id, [])
         if not messages:
             return
 
-        # Get caption from first message that has one
         caption = next((msg.caption for msg in messages if msg.caption), "")
         
-        # Process caption through text processor
         processed_caption = await self.editor.process(caption)
         
-        # Banned words check - forward to dump channel
         if self._contains_banned_words(processed_caption):
             logger.warning("Media group contains banned words - forwarding to dump channel")
             await self.forward_to_dump_channel(messages, processed_caption)
             return
         
-        # Process all media in the group
         media_list = []
         large_media_files = []
         for msg in messages:
@@ -114,10 +104,9 @@ class ContentChecker:
                 else:
                     media_list.append(media)
         
-        # Forward large media to dump channel
         if large_media_files:
             logger.warning("Large media detected in group - forwarding to dump channel")
-            # Find messages containing large media
+        
             large_media_messages = []
             for msg in messages:
                 for media in large_media_files:
@@ -128,12 +117,10 @@ class ContentChecker:
             
             await self.forward_to_dump_channel(large_media_messages, processed_caption)
         
-        # If no non-large media left, return
         if not media_list:
             logger.info("No non-large media left in the group")
             return
         
-        # Check for duplicates in non-large media
         valid_files = []
         for media in media_list:
             if not await self.processor._check_duplicates([media]):
@@ -143,11 +130,8 @@ class ContentChecker:
         if not valid_files:
             logger.info("All non-large media in group are duplicates - skipping")
             return
-        
-        # Add to hash database
         await self.processor._add_to_hash_data(self.hash_data, processed_caption, valid_files)
         
-        # Forward non-large media to target channels
         await self.forward_media_group(valid_files, processed_caption)
 
     async def forward_media_group(self, media_list: List[Dict], caption: str):
@@ -159,7 +143,6 @@ class ContentChecker:
 
         for target_id in target_ids:
             try:
-                # Build media group for forwarding
                 media_group = []
                 for i, item in enumerate(media_list):
                     if item['type'] == 'photo':
@@ -169,7 +152,6 @@ class ContentChecker:
                     else:
                         continue
                     
-                    # Apply caption only to first item
                     if i == 0:
                         media_caption = caption
                         parse_mode = ParseMode.MARKDOWN_V2
@@ -237,12 +219,11 @@ class ContentChecker:
                         media_type = InputMediaVideo
                         media_id = msg.video.file_id
                     elif msg.document:
-                        media_type = InputMediaVideo  # Telegram doesn't have InputMediaDocument
+                        media_type = InputMediaVideo 
                         media_id = msg.document.file_id
                     else:
                         continue
                     
-                    # Apply caption only to first item
                     if i == 0:
                         media_caption = caption
                         parse_mode = ParseMode.MARKDOWN_V2

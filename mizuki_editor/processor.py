@@ -2,9 +2,9 @@ import logging
 from typing import List, Dict, Optional, Union
 from telegram import Message
 from mizuki_editor.editor import Editor
-from util import get_admin_ids, get_dump_channel_id
+from util import get_admin_ids
 import imagehash
-from mizuki_editor.hash import _generate_media_hashes, _add_to_hash_data, _load_hash_data
+from mizuki_editor.hash import _generate_media_hashes, _add_to_hash_data
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ class Processor:
     async def process_message(self, message: Message) -> Optional[Union[List[Dict], str]]:
         """Process a message through the content checker pipeline"""
         try:
-            # Admin access check
             user_id = message.from_user.id if message.from_user else None
             if user_id not in get_admin_ids():
                 logger.warning(f"Non-admin user {user_id} attempted direct post")
@@ -43,17 +42,15 @@ class Processor:
             return False
             
         for media in media_hashes:
-            # Skip skipped media (large files)
+  
             if media.get('skipped'):
                 continue
                 
-            # Generate the same key we use for storage
             if media['type'] == 'photo':
                 media_key = media['phash']
             else:
                 media_key = media['sha256']
             
-            # Direct check if this exact media exists
             if media_key in self.hash_data:
                 logger.info(f"Duplicate media detected: {media_key}")
                 return True

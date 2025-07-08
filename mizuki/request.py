@@ -9,7 +9,6 @@ os.makedirs(JSON_FOLDER, exist_ok=True)
 REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
 FORWARD_FILE = os.path.join(JSON_FOLDER, "forward_id.json")
 
-# Initialize files if they don't exist
 if not os.path.exists(REQ_FILE):
     with open(REQ_FILE, 'w') as f:
         json.dump({}, f)
@@ -27,7 +26,6 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     group_id = context.args[0].strip()
     user = update.effective_user
     
-    # Validate group ID format
     try:
         group_id_int = int(group_id)
     except ValueError:
@@ -35,7 +33,6 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     try:
-        # 1. Verify group exists and bot has access
         try:
             chat = await context.bot.get_chat(group_id_int)
         except Exception as e:
@@ -86,7 +83,6 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("✅ 𝗧𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽 𝗶𝘀 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗮𝗽𝗽𝗿𝗼𝘃𝗲𝗱!")
             return
 
-        # 7. Check for existing request
         with open(REQ_FILE, 'r') as f:
             requests = json.load(f)
         
@@ -94,7 +90,6 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("⚠️ 𝗬𝗼𝘂 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗵𝗮𝘃𝗲 𝗮 𝗽𝗲𝗻𝗱𝗶𝗻𝗴 𝗿𝗲𝗾𝘂𝗲𝘀𝘁")
             return
 
-        # 8. Store the valid request
         requests[str(user.id)] = {
             "user_id": user.id,
             "username": user.username or user.first_name,
@@ -107,7 +102,6 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(REQ_FILE, 'w') as f:
             json.dump(requests, f, indent=2)
 
-        # 9. Notify admins
         admins = get_admin_ids()
         notification_text = (
             f"📩 New Request:\n"

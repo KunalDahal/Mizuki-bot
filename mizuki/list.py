@@ -1,14 +1,15 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
 from mizuki.admin import admin_only
-from util import load_banned_words, load_channels, load_remove_words, load_replace_words,FORWARD_FILE
+from util import load_banned_words, load_channels, load_remove_words, load_replace_words, TARGET_FILE, EMOJI_FILE, SYMBOL_FILE
 import json
 import math
+import os
 
 ITEMS_PER_PAGE = 10
 
 async def create_pagination_buttons(current_page: int, total_pages: int, prefix: str):
-    """Create pagination buttons"""
+
     buttons = []
     
     if current_page > 0:
@@ -21,9 +22,30 @@ async def create_pagination_buttons(current_page: int, total_pages: int, prefix:
     
     return InlineKeyboardMarkup([buttons])
 
+def load_emoji_replacements():
+
+    if not os.path.exists(EMOJI_FILE):
+        return {}
+    try:
+        with open(EMOJI_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading emoji replacements: {e}")
+        return {}
+
+def load_preserve_symbols():
+
+    try:
+        if not os.path.exists(SYMBOL_FILE):
+            return []
+        with open(SYMBOL_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return []
+
 @admin_only
 async def list_banned(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """List banned words with pagination"""
+
     banned_words = load_banned_words()
     total_pages = math.ceil(len(banned_words) / ITEMS_PER_PAGE)
     current_page = 0
@@ -43,7 +65,7 @@ async def list_banned(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def list_channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """List monitored channels with pagination"""
+
     channels = load_channels()
     total_pages = math.ceil(len(channels) / ITEMS_PER_PAGE)
     current_page = 0
@@ -63,7 +85,7 @@ async def list_channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def list_remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """List remove words with pagination"""
+
     remove_words = load_remove_words()
     total_pages = math.ceil(len(remove_words) / ITEMS_PER_PAGE)
     current_page = 0
@@ -83,7 +105,7 @@ async def list_remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def list_replace(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """List replace words with pagination"""
+
     replace_words = load_replace_words()
     total_pages = math.ceil(len(replace_words) / ITEMS_PER_PAGE)
     current_page = 0
@@ -101,8 +123,48 @@ async def list_replace(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = await create_pagination_buttons(current_page, total_pages, "lrp")
     await update.message.reply_text(message, reply_markup=keyboard, parse_mode="HTML")
 
+@admin_only
+async def list_emoji_replacements(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    emoji_replacements = load_emoji_replacements()
+    total_pages = math.ceil(len(emoji_replacements) / ITEMS_PER_PAGE)
+    current_page = 0
+    
+    if not emoji_replacements:
+        await update.message.reply_text("No emoji replacements found.")
+        return
+    
+    start_idx = current_page * ITEMS_PER_PAGE
+    end_idx = start_idx + ITEMS_PER_PAGE
+    page_items = list(emoji_replacements.items())[start_idx:end_idx]
+    
+    message = "😀 <b>Emoji Replacements</b>:\n\n" + "\n".join(f"• {k} → {v}" for k, v in page_items)
+    
+    keyboard = await create_pagination_buttons(current_page, total_pages, "lre")
+    await update.message.reply_text(message, reply_markup=keyboard, parse_mode="HTML")
+
+@admin_only
+async def list_preserve_symbols(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    symbols = load_preserve_symbols()
+    total_pages = math.ceil(len(symbols) / ITEMS_PER_PAGE)
+    current_page = 0
+    
+    if not symbols:
+        await update.message.reply_text("No preserved symbols found.")
+        return
+    
+    start_idx = current_page * ITEMS_PER_PAGE
+    end_idx = start_idx + ITEMS_PER_PAGE
+    page_symbols = symbols[start_idx:end_idx]
+    
+    message = "🔣 <b>Preserved Symbols</b>:\n\n" + "\n".join(f"• {symbol}" for symbol in page_symbols)
+    
+    keyboard = await create_pagination_buttons(current_page, total_pages, "lsy")
+    await update.message.reply_text(message, reply_markup=keyboard, parse_mode="HTML")
+
 async def handle_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle pagination callbacks"""
+
     query = update.callback_query
     await query.answer()
     
@@ -126,6 +188,14 @@ async def handle_list_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         items = list(load_replace_words().items())
         title = "🔁 <b>Replace Words</b>:\n\n"
         item_format = "• {} → {}"
+    elif prefix == "lre":
+        items = list(load_emoji_replacements().items())
+        title = "😀 <b>Emoji Replacements</b>:\n\n"
+        item_format = "• {} → {}"
+    elif prefix == "lsy":
+        items = load_preserve_symbols()
+        title = "🔣 <b>Preserved Symbols</b>:\n\n"
+        item_format = "• {}"
     else:
         return
     
@@ -133,7 +203,7 @@ async def handle_list_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     start_idx = page * ITEMS_PER_PAGE
     end_idx = start_idx + ITEMS_PER_PAGE
     
-    if prefix == "lrp":
+    if prefix in ["lrp", "lre"]:
         page_items = items[start_idx:end_idx]
         message = title + "\n".join(item_format.format(k, v) for k, v in page_items)
     else:
@@ -147,7 +217,7 @@ async def handle_list_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 async def list_forward_groups(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """List all forward groups with their links"""
     try:
-        with open(FORWARD_FILE, 'r') as f:
+        with open(TARGET_FILE, 'r') as f:
             forward_groups = json.load(f)
         
         if not forward_groups:
@@ -175,6 +245,8 @@ def get_list_handlers():
         CommandHandler("lc", list_channels),
         CommandHandler("lrm", list_remove),
         CommandHandler("lrp", list_replace),
-        CommandHandler("lf", list_forward_groups),  # New command
-        CallbackQueryHandler(handle_list_callback, pattern=r"^(lb|lrm|lrp|lc):[0-9]+$")
+        CommandHandler("lre", list_emoji_replacements),
+        CommandHandler("lsy", list_preserve_symbols),
+        CommandHandler("lf", list_forward_groups),
+        CallbackQueryHandler(handle_list_callback, pattern=r"^(lb|lrm|lrp|lc|lre|lsy):[0-9]+$")
     ]

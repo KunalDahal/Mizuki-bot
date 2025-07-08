@@ -5,14 +5,13 @@ from util import load_channels,save_channels
 
 @admin_only
 async def add_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add a channel to monitoring list"""
+
     if not context.args:
         await update.message.reply_text("Usage: /a <channel_id>")
         return
     
     channel_id = context.args[0].strip()
     
-    # Convert to integer for consistent handling
     try:
         channel_id_int = int(channel_id)
     except ValueError:
@@ -25,7 +24,6 @@ async def add_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     channel_ids = load_channels()
     
-    # Check using integer value
     if channel_id_int in channel_ids:
         await update.message.reply_text("ℹ️ Channel already in monitoring list")
         return
@@ -39,7 +37,7 @@ def get_add_channel_handler():
 
 @admin_only
 async def remove_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Remove a channel from monitoring list"""
+
     if not context.args:
         await update.message.reply_text("Usage: /r <channel_id>")
         return
@@ -51,8 +49,7 @@ async def remove_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     channel_ids = load_channels()
-    
-    # Check using integer value
+
     if channel_id not in channel_ids:
         await update.message.reply_text("ℹ️ Channel not in monitoring list")
         return

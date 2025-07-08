@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @admin_only
 async def add_banned_word(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add words to the banned list"""
+
     if not context.args:
         await update.message.reply_text("Usage: /ab word1 word2 ...")
         return
@@ -31,7 +31,7 @@ async def add_banned_word(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def remove_banned_word(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Remove words from the banned list"""
+
     if not context.args:
         await update.message.reply_text("Usage: /rb word1 word2 ...")
         return
