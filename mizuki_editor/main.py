@@ -1,46 +1,69 @@
 import logging
 import asyncio
-from collections import deque
+import time
+import random
 from asyncio import Lock
 from telegram import Update
 from telegram.ext import ContextTypes
 from mizuki_editor.content_checker import ContentChecker
 from mizuki_editor.forward import forward_to_all_targets
+from collections import deque
 
 logger = logging.getLogger(__name__)
 
-# Global queue and lock for message processing
-message_queue = deque()
+message_queue = []
 queue_lock = Lock()
 
+class RateLimiter:
+    def __init__(self, max_calls, period):
+        self.max_calls = max_calls
+        self.period = period
+        self.timestamps = deque(maxlen=max_calls)
+        
+    async def wait(self):
+        now = time.time()
+        if len(self.timestamps) >= self.max_calls:
+            elapsed = now - self.timestamps[0]
+            if elapsed < self.period:
+                wait_time = self.period - elapsed
+                await asyncio.sleep(wait_time * random.uniform(0.8, 1.2))
+        self.timestamps.append(time.time())
+
 async def worker(context: ContextTypes.DEFAULT_TYPE):
-    """Worker to process messages from the queue one by one"""
+    """Worker to process messages from the queue with rate limiting"""
+    if 'rate_limiter' not in context.bot_data:
+        # 20 messages per 60 seconds (Telegram limit)
+        context.bot_data['rate_limiter'] = RateLimiter(20, 60)
+    
     while True:
-        # Get next message from queue
+        # Wait for rate limit
+        await context.bot_data['rate_limiter'].wait()
+        
         async with queue_lock:
             if not message_queue:
-                # Reset worker flag when queue is empty
                 context.bot_data["worker_started"] = False
                 return
-            update = message_queue.popleft()
+            
+            # Prioritize oldest messages
+            message_queue.sort(key=lambda u: u.message.date.timestamp() 
+                              if u.message and u.message.date else 0)
+            update = message_queue.pop(0)
         
         try:
-            # Initialize checker if not present
             if 'content_checker' not in context.bot_data:
                 context.bot_data['content_checker'] = ContentChecker()
             
             checker = context.bot_data['content_checker']
             msg = update.message
 
-            # Process the message through content checker
             result = await checker.process_message(msg)
             if result is None:
                 continue
                 
             # Forward based on result type
-            if isinstance(result, str):  # Text message
+            if isinstance(result, str):
                 await forward_to_all_targets(context, text=result)
-            elif isinstance(result, list):  # Media message
+            elif isinstance(result, list):
                 await forward_to_all_targets(context, media=result)
                 
         except Exception as e:

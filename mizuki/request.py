@@ -2,20 +2,7 @@ import os
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from util import get_admin_ids
-
-JSON_FOLDER = "JSON"
-os.makedirs(JSON_FOLDER, exist_ok=True)
-REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
-FORWARD_FILE = os.path.join(JSON_FOLDER, "forward_id.json")
-
-if not os.path.exists(REQ_FILE):
-    with open(REQ_FILE, 'w') as f:
-        json.dump({}, f)
-
-if not os.path.exists(FORWARD_FILE):
-    with open(FORWARD_FILE, 'w') as f:
-        json.dump([], f)
+from util import get_admin_ids,REQ_FILE,TARGET_FILE
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /request command from users with full validation"""
@@ -76,7 +63,7 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         # 6. Check if already approved
-        with open(FORWARD_FILE, 'r') as f:
+        with open(TARGET_FILE, 'r') as f:
             forward_list = json.load(f)
         
         if group_id_int in forward_list:
