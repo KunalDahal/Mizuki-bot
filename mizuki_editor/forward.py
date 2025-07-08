@@ -3,8 +3,6 @@ import asyncio
 from telegram import InputMediaPhoto, InputMediaVideo
 from telegram.constants import ParseMode
 from typing import List, Dict
-from telethon.tl.types import MessageService
-from telethon.errors import FloodWaitError
 from util import get_target_channel
 
 logger = logging.getLogger(__name__)
@@ -25,7 +23,6 @@ async def forward_to_all_targets(
                     chat_id=target_id, text=text, parse_mode=ParseMode.MARKDOWN_V2
                 )
             elif media:
-                # For single media items
                 if len(media) == 1:
                     item = media[0]
                     caption = item.get("processed_caption")
@@ -45,7 +42,6 @@ async def forward_to_all_targets(
                             caption=caption,
                             parse_mode=parse_mode,
                         )
-                # For multiple media items (not a group)
                 else:
                     media_group = []
                     for i, item in enumerate(media):
@@ -55,8 +51,6 @@ async def forward_to_all_targets(
                             media_type = InputMediaVideo
                         else:
                             continue
-
-                        # Apply caption only to first item
                         caption = item.get("processed_caption") if i == 0 else None
                         parse_mode = ParseMode.MARKDOWN_V2 if caption else None
 

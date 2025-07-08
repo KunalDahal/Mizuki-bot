@@ -111,10 +111,8 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
                 logger.warning(f"Skipping large video ({file.file_size/1_000_000:.1f}MB)")
                 return [{'type': 'video', 'skipped': True, 'file_id': video.file_id}]
                 
-            # Download entire video at once
             file_path = await file.download_to_drive()
             
-            # Compute video hashes
             video_hashes = compute_video_hashes(file_path)
             
             media_hashes.append({
@@ -124,7 +122,6 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
                 'file_id': video.file_id
             })
             
-            # Clean up temporary file
             os.remove(file_path)
         except Exception as e:
             logger.error(f"Error processing video: {e}")
@@ -134,10 +131,8 @@ async def _generate_media_hashes(message: Message) -> List[Dict]:
 async def _add_to_hash_data(hash_data, caption: str, media_hashes: List[Dict]):
     """Add new media hashes to the hash database"""
     try:
-        # Generate unique key using media hash instead of caption
         media_keys = []
         for media in media_hashes:
-            # Skip skipped media (large files)
             if media.get('skipped'):
                 continue
                 
@@ -153,7 +148,6 @@ async def _add_to_hash_data(hash_data, caption: str, media_hashes: List[Dict]):
                 'timestamp': int(time.time())
             }
         
-        # Maintain size limit
         while len(hash_data) > MAX_HASH_ENTRIES:
             oldest_key = min(hash_data, key=lambda k: hash_data[k]['timestamp'])
             hash_data.pop(oldest_key)

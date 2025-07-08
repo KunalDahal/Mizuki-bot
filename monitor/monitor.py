@@ -24,7 +24,8 @@ class ChannelMonitor:
         self.forward_attempts = {} 
         self.processing_semaphore = asyncio.Semaphore(1) 
         self.base_delay = 30 
-        self.jitter_range = (0, 10)
+        self.channel_check_jitter = (0, 10)  # For spacing between channel checks
+        self.queue_delay_jitter = (0, 30)    # Jitter for forwarding delay (0-30s)
         self.last_channel_file_check = 0
         self.channel_file_check_interval = 10  # Check every 5 minutes
         
@@ -91,7 +92,7 @@ class ChannelMonitor:
                         self.access_errors[channel_id] = self.access_errors.get(channel_id, 0) + 1
 
                     # Random jitter between channel checks
-                    await asyncio.sleep(random.uniform(*self.jitter_range))
+                    await asyncio.sleep(random.uniform(*self.channel_check_jitter))
 
                 if len(valid_channels) != len(self.channel_ids):
                     self.channel_ids = valid_channels
@@ -124,7 +125,6 @@ class ChannelMonitor:
                     logger.info(f"Channel list updated. Added: {added}, Removed: {removed}")
                     self.channel_ids = new_channels
                     
-                    # Initialize new channels
                     for channel_id in added:
                         try:
                             await self.recovery.initialize_channel_state(self.client, channel_id)
@@ -139,7 +139,6 @@ class ChannelMonitor:
                             logger.error(f"Error initializing new channel {channel_id}: {e}")
                             self.last_message_ids[channel_id] = 0
 
-                    # Clean up state for removed channels
                     for channel_id in removed:
                         if channel_id in self.last_message_ids:
                             del self.last_message_ids[channel_id]
@@ -159,25 +158,20 @@ class ChannelMonitor:
         try:
             entity = await self.client.get_entity(channel_id)
             
-            # Get messages newer than last_id
             messages = await self.client.get_messages(
                 entity,
                 limit=100,
                 min_id=last_id,
                 reverse=True  # Get newest messages first
             )
-            
-            # Filter to only messages newer than last_id (redundant but safe)
             new_messages = [msg for msg in messages if msg.id > last_id]
             
             if new_messages:
                 logger.info(f"Found {len(new_messages)} new messages in channel {channel_id}")
                 
-                # Update last message ID immediately to prevent duplicates
                 new_last_id = max(msg.id for msg in new_messages)
                 self.recovery.update_channel_state(channel_id, new_last_id)
                 
-                # Group messages by media group or single
                 grouped = {}
                 single = []
                 for msg in new_messages:
@@ -186,13 +180,12 @@ class ChannelMonitor:
                     else:
                         single.append(msg)
                 
-                # Add to queue
+                
                 async with self.queue_lock:
-                    # Add media groups
+                  
                     for group in grouped.values():
                         self.message_queue.append((channel_id, group))
                     
-                    # Add single messages in batches of 5
                     for i in range(0, len(single), 5):
                         batch = single[i:i+5]
                         self.message_queue.append((channel_id, batch))
@@ -214,18 +207,18 @@ class ChannelMonitor:
                 await asyncio.sleep(wait_time)
             except Exception as e:
                 logger.error(f"Failed to forward {description}, attempt {attempt + 1}/{max_retries}: {e}")
-                await asyncio.sleep(random.uniform(*self.jitter_range))
+                await asyncio.sleep(random.uniform(*self.channel_check_jitter))
         
         logger.error(f"Failed to forward {description} after {max_retries} attempts")
         return False
 
     async def forward_message(self, message):
-        jitter = random.uniform(*self.jitter_range)
+        jitter = random.uniform(*self.channel_check_jitter)
         await asyncio.sleep(jitter)
         await self.client.forward_messages(self.bot_username, message)
 
     async def forward_message_group(self, messages):
-        jitter = random.uniform(*self.jitter_range)
+        jitter = random.uniform(*self.channel_check_jitter)
         await asyncio.sleep(jitter)
         await self.client.forward_messages(self.bot_username, messages)
     
@@ -248,7 +241,7 @@ class ChannelMonitor:
     
     async def _process_queue(self):
         """Process messages from the queue with delays"""
-        while self.running:  # Add running check
+        while self.running:  
             async with self.queue_lock:
                 if not self.message_queue:
                     await asyncio.sleep(1)
@@ -257,23 +250,22 @@ class ChannelMonitor:
                 channel_id, messages = self.message_queue.popleft()
                 
             try:
-                # Calculate delay with jitter
-                jitter = random.uniform(*self.jitter_range)
-                await asyncio.sleep(self.base_delay + jitter)
+                jitter = random.uniform(*self.queue_delay_jitter)
+                total_delay = self.base_delay + jitter
+                logger.debug(f"Waiting {total_delay:.2f}s before processing {len(messages)} messages from {channel_id}")
+                await asyncio.sleep(total_delay)
                 
-                # Use Forwarder class for consistent forwarding
                 forwarder = Forwarder(self.client, self.bot_username)
                 result = await forwarder.forward_with_retry(messages)
                 
                 if not result:
-                    # Re-add to queue if failed
                     async with self.queue_lock:
                         self.message_queue.appendleft((channel_id, messages))
-                        await asyncio.sleep(60)  # Wait longer before retry
+                        await asyncio.sleep(60) 
                 
             except Exception as e:
                 logger.error(f"Error processing queue item: {e}")
-                # Re-add to queue if error occurs
+              
                 async with self.queue_lock:
                     self.message_queue.appendleft((channel_id, messages))
-                    await asyncio.sleep(60)  # Wait longer before retry
+                    await asyncio.sleep(60)

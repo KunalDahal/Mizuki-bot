@@ -40,8 +40,6 @@ class Forwarder:
         """Forward a media group while preserving its structure"""
         if not messages:
             return []
-
-        # Filter out service messages
         valid_messages = [msg for msg in messages if not isinstance(msg, MessageService)]
 
         if not valid_messages:
@@ -49,7 +47,6 @@ class Forwarder:
             return []
 
         try:
-            # Forward the entire group at once
             return await self.client.forward_messages(
                 self.bot_username,
                 valid_messages
@@ -61,7 +58,6 @@ class Forwarder:
         except Exception as e:
             logger.error(f"Group forward failed: {e}")
             
-            # Fallback: try forwarding individually
             logger.info("Attempting individual forward as fallback")
             results = []
             for msg in valid_messages:
@@ -86,7 +82,7 @@ class Forwarder:
             except Exception as e:
                 logger.error(f"Forward attempt {attempt}/{max_retries} failed: {e}")
                 if attempt < max_retries:
-                    wait_time = min(2 ** attempt, 60)  # Exponential backoff
+                    wait_time = min(2 ** attempt, 60) 
                     await asyncio.sleep(wait_time)
         
         logger.error(f"Failed to forward after {max_retries} attempts")

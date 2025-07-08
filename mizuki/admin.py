@@ -1,10 +1,8 @@
 from telegram import Update
-from telegram.ext import ContextTypes
-import functools  # Changed from 'from functools import wraps' to 'import functools'
+import functools 
 import logging
 from util import get_admin_ids
 
-# Set up logger
 logger = logging.getLogger(__name__)
 
 def admin_only(func):
@@ -23,8 +21,7 @@ def admin_only(func):
         if user_id not in get_admin_ids():
             await update.message.reply_text("🚫 You are not authorized to use this command.")
             return
-        
-        # Call the original function with correct arguments
+
         if isinstance(update_or_self, Update):
             return await func(update, context)
         else:

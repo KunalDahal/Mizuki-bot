@@ -5,15 +5,12 @@ from telegram.ext import ContextTypes, CommandHandler
 from util import get_admin_ids,JSON_FOLDER,REQ_FILE,FORWARD_FILE
 
 async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /approve command from admins"""
-    # Check if user is admin
     user = update.effective_user
     admins = get_admin_ids()
     if user.id not in admins:
         await update.message.reply_text("❌ You don't have permission to approve requests")
         return
-    
-    # Check if user_id was provided
+
     if not context.args:
         await update.message.reply_text("Usage: /approve <user_id>")
         return
@@ -21,19 +18,16 @@ async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = context.args[0].strip()
     
     try:
-        # Load requests
+
         with open(REQ_FILE, 'r') as f:
             requests = json.load(f)
         
-        # Check if request exists
         if user_id not in requests:
             await update.message.reply_text(f"❌ No pending request found for user {user_id}")
             return
         
-        # Get the group_id from the request
         group_id = requests[user_id]["group_id"]
-        
-        # Add to forward list
+
         with open(FORWARD_FILE, 'r') as f:
             forward_list = json.load(f)
         
@@ -42,12 +36,10 @@ async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             with open(FORWARD_FILE, 'w') as f:
                 json.dump(forward_list, f, indent=2)
         
-        # Remove from requests
         del requests[user_id]
         with open(REQ_FILE, 'w') as f:
             json.dump(requests, f, indent=2)
         
-        # Notify user if possible
         try:
             await context.bot.send_message(
                 chat_id=int(user_id),
