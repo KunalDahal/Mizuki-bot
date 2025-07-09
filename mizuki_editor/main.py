@@ -1,3 +1,4 @@
+# main.py
 import logging
 import asyncio
 import time
@@ -26,25 +27,23 @@ class RateLimiter:
             elapsed = now - self.timestamps[0]
             if elapsed < self.period:
                 wait_time = self.period - elapsed
+                logger.debug(f"Rate limited - waiting {wait_time:.2f}s")
                 await asyncio.sleep(wait_time * random.uniform(0.8, 1.2))
-        self.timestamps.append(time.time())
+        self.timestamps.append(now)
 
 async def worker(context: ContextTypes.DEFAULT_TYPE):
-    """Worker to process messages from the queue with rate limiting"""
     if 'rate_limiter' not in context.bot_data:
-        # 20 messages per 60 seconds (Telegram limit)
         context.bot_data['rate_limiter'] = RateLimiter(20, 60)
     
     while True:
-        # Wait for rate limit
         await context.bot_data['rate_limiter'].wait()
         
         async with queue_lock:
             if not message_queue:
                 context.bot_data["worker_started"] = False
+                logger.debug("Worker stopping - queue empty")
                 return
             
-            # Prioritize oldest messages
             message_queue.sort(key=lambda u: u.message.date.timestamp() 
                               if u.message and u.message.date else 0)
             update = message_queue.pop(0)
@@ -60,7 +59,6 @@ async def worker(context: ContextTypes.DEFAULT_TYPE):
             if result is None:
                 continue
                 
-            # Forward based on result type
             if isinstance(result, str):
                 await forward_to_all_targets(context, text=result)
             elif isinstance(result, list):
@@ -69,18 +67,21 @@ async def worker(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Error handling queued message: {e}")
             if update.message:
-                await update.message.reply_text("⚠️ Error processing your message. Please try again.")
+                try:
+                    await update.message.reply_text("⚠️ Error processing your message. Please try again.")
+                except Exception as reply_error:
+                    logger.error(f"Failed to send error reply: {reply_error}")
 
 async def handle_forwarded_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle forwarded messages from users by adding to processing queue"""
     if update.message is None:
         return
 
-    # Add message to processing queue
     async with queue_lock:
         message_queue.append(update)
+        queue_size = len(message_queue)
     
-    # Start worker if not already running
+    logger.info(f"Message added to queue (size: {queue_size})")
+    
     if not context.bot_data.get("worker_started", False):
         context.bot_data["worker_started"] = True
         asyncio.create_task(worker(context))
