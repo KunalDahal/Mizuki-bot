@@ -22,9 +22,9 @@ class Editor:
 
     def summarize_text(self, text):
         word_count = len(text.split())
-        if word_count <= 101:
+        if word_count <= 151:
             return text
-        summary = summarizer.summarize(text, words=100)
+        summary = summarizer.summarize(text, words=200)
         if not summary:
             return text
 
@@ -156,8 +156,8 @@ class Editor:
         main_text = escape_markdown_v2(summarized)
         footer_text = escape_markdown_v2("💠 ~ @Animes_News_Ocean")
 
-        header = "> _*@Mizuki\\_Newsbot*_"
-        header_new=f"||{header}||\n\n"
+        header = "_*@Mizuki\_Newsbot*_"
+        header_new=f"> ||{header}||\n\n"
         
         if not has_original_emojis and main_text:
             main_text = f"❄️{main_text}"
