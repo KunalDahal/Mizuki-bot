@@ -1,4 +1,3 @@
-# monitor.py
 import os
 import hashlib
 import asyncio
@@ -9,7 +8,7 @@ from datetime import datetime
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.network import ConnectionTcpFull
-from limit.config import get_session_string_1, get_api_hash_1, get_api_id_1, get_source_id, get_target_id, VIDEO_HASH_FILE, JSON_FOLDER
+from limit.config import get_session_string_1, get_api_hash_1, get_api_id_1, get_source_id, get_target_id, VIDEO_HASH_FILE, JSON_FOLDER,escape_markdown_v2
 from limit.m_queue import ProcessingQueue
 from limit.content_checker import ContentChecker
 
@@ -29,6 +28,26 @@ MAX_RETRIES = 3
 RETRY_DELAY = 2
 DOWNLOAD_TIMEOUT = 300  # 5 minutes
 
+def format_special_text(text):
+    """
+    Apply special formatting to specific text patterns:
+    - @Mizuki_Newsbot: wrap only this username in > and ||
+    - 💠 ~ @Animes_News_Ocean: wrap only this part in >
+    - Rest of the text remains unchanged
+    """
+    if not text:
+        return text
+    
+    # Process @Mizuki_Newsbot
+    if "@Mizuki_Newsbot" in text:
+        text = text.replace("@Mizuki_Newsbot", "> ||@Mizuki_Newsbot||")
+    
+    # Process 💠 ~ @Animes_News_Ocean
+    if "💠 ~ @Animes_News_Ocean" in text:
+        text = text.replace("💠 ~ @Animes_News_Ocean", ">💠 ~ @Animes_News_Ocean")
+    
+    return text
+    
 class VideoMonitor:
     def __init__(self):
         self.client = TelegramClient(
@@ -82,7 +101,7 @@ class VideoMonitor:
         except Exception as e:
             logger.error(f"❌ Hashing failed: {e}")
             return None
-
+    
     async def download_with_retry(self, media, temp_path):
         """Download media with retry logic and detailed progress"""
         for attempt in range(1, MAX_RETRIES + 1):
@@ -181,7 +200,6 @@ class VideoMonitor:
             if self.content_checker.is_duplicate(file_hash):
                 logger.warning(f"♻️ Duplicate detected! Hash: {file_hash}")
                 return None
-
             # Use group caption if available, otherwise use individual caption
             caption = group_caption if group_caption else media_item.caption
 
@@ -192,7 +210,7 @@ class VideoMonitor:
                 file=temp_path,
                 caption=caption,
                 supports_streaming=True,
-                attributes=media_item.media.document.attributes if hasattr(media_item.media, 'document') else None
+                attributes=media_item.media.document.attributes if hasattr(media_item.media, 'document') else None,
             )
 
             # Update records
@@ -271,17 +289,19 @@ class VideoMonitor:
             
             if not message.media:
                 if message.text:
-                    await self.client.send_message(self.target_channel, message.text)
+                    processed_text = format_special_text(message.text)
+                    await self.client.send_message(
+                        self.target_channel, 
+                        escape_markdown_v2(processed_text)
+                    )
                     logger.info(f"📝 Forwarded text message: {message.id}")
                     self.content_checker.mark_message_processed(message.id)
                 return
-
-            # Handle caption properly for different message types
             caption = None
             if hasattr(message, 'text') and message.text:
-                caption = message.text
+                caption = format_special_text(message.text)
             elif hasattr(message, 'caption'):
-                caption = message.caption
+                caption = format_special_text(message.caption)
             
             if hasattr(message, 'grouped_id') and message.grouped_id:
                 await self.queue.add_to_queue(
@@ -318,3 +338,5 @@ class VideoMonitor:
         await self.client.start()
         logger.info("✅ Monitor running")
         await self.client.run_until_disconnected()
+        
+    
