@@ -2,9 +2,9 @@ import os
 import sys
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from mizuki.admin import admin_only
+from mizuki_editor.commands.admin import admin_only
 import logging
-from util import JSON_FOLDER, SOURCE_FILE, REMOVE_FILE, REPLACE_FILE, BAN_FILE, HASH_FILE, SYMBOL_FILE, EMOJI_FILE, REQ_FILE, USER_FILE, TARGET_FILE, RECOVERY_FILE
+from util import JSON_FOLDER, SOURCE_FILE, REMOVE_FILE, REPLACE_FILE, BAN_FILE, HASH_FILE, SYMBOL_FILE, EMOJI_FILE, TARGET_FILE, RECOVERY_FILE
 import psutil
 import time
 import asyncio
@@ -21,7 +21,6 @@ DEFAULT_STRUCTURES = {
     "symbol": [],
     "emoji": {},
     "requests": {},
-    "users": [],
     "target": [],
     "recovery": {}
 }
@@ -34,8 +33,6 @@ FILE_MAPPING = {
     "hash": HASH_FILE,
     "symbol": SYMBOL_FILE,
     "emoji": EMOJI_FILE,
-    "requests": REQ_FILE,
-    "users": USER_FILE,
     "target": TARGET_FILE,
     "recovery": RECOVERY_FILE
 }

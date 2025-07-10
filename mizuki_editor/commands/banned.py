@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from util import load_banned_words, save_banned_words
-from mizuki.admin import admin_only
+from mizuki_editor.commands.admin import admin_only
 import logging
 
 logger = logging.getLogger(__name__)

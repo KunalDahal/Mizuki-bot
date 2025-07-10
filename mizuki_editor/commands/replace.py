@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from util import load_replace_words, save_replace_words
-from mizuki.admin import admin_only
+from mizuki_editor.commands.admin import admin_only
 
 @admin_only
 async def add_replace(update: Update, context: ContextTypes.DEFAULT_TYPE):

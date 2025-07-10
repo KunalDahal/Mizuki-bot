@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Union
 from collections import defaultdict
 from telegram import Bot, InputMediaPhoto, InputMediaVideo, Message
 from telegram.constants import ParseMode
-from util import get_target_channel, get_bot_token_2, load_banned_words, get_dump_channel_id
+from util import get_target_channel, get_bot_token_2, load_banned_words, get_dump_channel_id,get_vid_channel_id
 from mizuki_editor.hash import _load_hash_data
 from mizuki_editor.processor import Processor
 from mizuki_editor.editor import Editor
@@ -20,6 +20,7 @@ class ContentChecker:
         self.processor = Processor(self.hash_data, self.banned_words, self)
         self.editor = Editor()
         self.dump_channel = get_dump_channel_id()
+        self.vid_channel = get_vid_channel_id()
     
     def _contains_banned_words(self, text: str) -> bool:
         """Check if text contains any banned words"""
@@ -114,7 +115,7 @@ class ContentChecker:
                         large_media_messages.append(msg)
                         break
             
-            await self.forward_to_dump_channel(large_media_messages, processed_caption)
+            await self.forward_to_vid_channel(large_media_messages, processed_caption)
         
         if not media_list:
             logger.info("No non-large media left in the group")
@@ -238,6 +239,78 @@ class ContentChecker:
                 
                 await self.bot.send_media_group(
                     chat_id=self.dump_channel,
+                    media=media_group
+                )
+                logger.info(f"Forwarded media group with {len(media_group)} items to dump channel")
+        except Exception as e:
+            logger.error(f"Failed to forward to dump channel: {e}")
+            
+    async def forward_to_vid_channel(self, messages: List[Message], caption: str):
+        """Forward messages to dump channel with formatted caption"""
+        if not self.vid_channel:
+            logger.warning("No dump channel configured")
+            return
+            
+        try:
+            if len(messages) == 1:
+                msg = messages[0]
+                if msg.text:
+                    await self.bot.send_message(
+                        chat_id=self.vid_channel,
+                        text=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.photo:
+                    await self.bot.send_photo(
+                        chat_id=self.vid_channel,
+                        photo=msg.photo[-1].file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.video:
+                    await self.bot.send_video(
+                        chat_id=self.vid_channel,
+                        video=msg.video.file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                elif msg.document:
+                    await self.bot.send_document(
+                        chat_id=self.vid_channel,
+                        document=msg.document.file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+            else:
+                media_group = []
+                for i, msg in enumerate(messages):
+                    if msg.photo:
+                        media_type = InputMediaPhoto
+                        media_id = msg.photo[-1].file_id
+                    elif msg.video:
+                        media_type = InputMediaVideo
+                        media_id = msg.video.file_id
+                    elif msg.document:
+                        media_type = InputMediaVideo 
+                        media_id = msg.document.file_id
+                    else:
+                        continue
+                    
+                    if i == 0:
+                        media_caption = caption
+                        parse_mode = ParseMode.MARKDOWN_V2
+                    else:
+                        media_caption = None
+                        parse_mode = None
+                    
+                    media_group.append(media_type(
+                        media=media_id,
+                        caption=media_caption,
+                        parse_mode=parse_mode
+                    ))
+                
+                await self.bot.send_media_group(
+                    chat_id=self.vid_channel,
                     media=media_group
                 )
                 logger.info(f"Forwarded media group with {len(media_group)} items to dump channel")

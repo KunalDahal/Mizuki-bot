@@ -2,7 +2,7 @@ import os
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from util import get_admin_ids,REQ_FILE,TARGET_FILE
+from limit.config import get_admin_ids,REQ_FILE,TARGET_FILE
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /request command from users with full validation"""

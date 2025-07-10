@@ -3,6 +3,7 @@ import os
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from util import SYMBOL_FILE
+from mizuki_editor.commands.admin import admin_only
 
 def load_preserve_symbols():
     """Load symbols to preserve during emoji removal"""
@@ -23,6 +24,7 @@ def save_preserve_symbols(symbols):
     except:
         return False
 
+@admin_only
 async def add_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Add new symbol to preserve (/as command)"""
     if not context.args:
@@ -42,6 +44,7 @@ async def add_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Failed to save symbol")
 
+@admin_only
 async def remove_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Remove symbol from preserve list (/rs command)"""
     if not context.args:

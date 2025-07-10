@@ -2,7 +2,7 @@ import os
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from util import get_admin_ids,JSON_FOLDER,REQ_FILE,TARGET_FILE
+from limit.config import get_admin_ids,REQ_FILE,TARGET_FILE
 
 async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user

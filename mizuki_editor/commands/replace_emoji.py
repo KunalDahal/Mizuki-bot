@@ -1,4 +1,4 @@
-
+from mizuki_editor.commands.admin import admin_only
 import json
 import os
 from telegram import Update
@@ -26,6 +26,7 @@ def save_emoji_replacements(data):
         print(f"Error saving emoji replacements: {e}")
         return False
 
+@admin_only
 async def add_emoji_replacement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Add new emoji replacement (/arep_em command)"""
     if len(context.args) < 2:
@@ -43,6 +44,7 @@ async def add_emoji_replacement(update: Update, context: ContextTypes.DEFAULT_TY
     else:
         await update.message.reply_text("❌ Failed to save replacement")
 
+@admin_only
 async def remove_emoji_replacement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Remove emoji replacement (/rrep_em command)"""
     if not context.args:

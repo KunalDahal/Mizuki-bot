@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
-from mizuki.admin import admin_only
+from mizuki_editor.commands.admin import admin_only
 from util import load_banned_words, load_channels, load_remove_words, load_replace_words, TARGET_FILE, EMOJI_FILE, SYMBOL_FILE
 import json
 import math
