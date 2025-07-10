@@ -1,7 +1,7 @@
 from telegram import Update
 import functools 
 import logging
-from limit.config import get_admin_ids
+from mizuki.config import get_admin_ids
 
 logger = logging.getLogger(__name__)
 

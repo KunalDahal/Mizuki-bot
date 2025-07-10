@@ -1,6 +1,6 @@
 import asyncio
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 import logging
 
@@ -12,6 +12,7 @@ class MediaItem:
     media: object 
     caption: Optional[str]
     grouped_id: Optional[int] = None
+    formatting_entities: Optional[Any] = None  # Add this line
 
 class ProcessingQueue:
     def __init__(self):
@@ -19,9 +20,22 @@ class ProcessingQueue:
         self.processing_groups: Dict[int, List[MediaItem]] = defaultdict(list)
         self.lock = asyncio.Lock()
 
-    async def add_to_queue(self, message_id: int, media: object, caption: Optional[str], grouped_id: Optional[int] = None):
+    async def add_to_queue(
+        self, 
+        message_id: int, 
+        media: object, 
+        caption: Optional[str], 
+        grouped_id: Optional[int] = None,
+        formatting_entities: Optional[Any] = None  # Add this parameter
+    ):
         """Add a media item to the processing queue"""
-        item = MediaItem(message_id=message_id, media=media, caption=caption, grouped_id=grouped_id)
+        item = MediaItem(
+            message_id=message_id,
+            media=media,
+            caption=caption,
+            grouped_id=grouped_id,
+            formatting_entities=formatting_entities  # Add this
+        )
         
         async with self.lock:
             if grouped_id:

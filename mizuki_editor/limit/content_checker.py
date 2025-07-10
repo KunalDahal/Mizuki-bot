@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Dict, Optional, Set
-from limit.config import VIDEO_HASH_FILE
+from mizuki_editor.limit.config import VIDEO_HASH_FILE
 import logging
 
 logger = logging.getLogger(__name__)

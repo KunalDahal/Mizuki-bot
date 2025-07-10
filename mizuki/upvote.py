@@ -2,8 +2,8 @@ import os
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from limit.admin import admin_only
-from limit.config import save_upvotes,load_upvotes
+from mizuki.admin import admin_only
+from mizuki.config import save_upvotes,load_upvotes
 
 async def upvote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /upvote command"""
