@@ -1,7 +1,6 @@
 import os
 from typing import List,Union,Dict,Any
 import json
-import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,19 +8,18 @@ JSON_FOLDER = "JSON"
 os.makedirs(JSON_FOLDER, exist_ok=True)
 REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
 USER_FILE = os.path.join(JSON_FOLDER, "users.json")
-VIDEO_HASH_FILE = os.path.join(JSON_FOLDER, "video.json")
-UPVOTE_FILE = os.path.join(JSON_FOLDER, "upvote.json")
 TARGET_FILE = os.path.join(JSON_FOLDER, "ano_id.json")
+UPVOTE_FILE = os.path.join(JSON_FOLDER, "upvote.json")
 
 for file in [
-    TARGET_FILE,USER_FILE
+    USER_FILE
 ]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump([], f)
 
 # ensure dict files
-for file in [REQ_FILE ,VIDEO_HASH_FILE,UPVOTE_FILE ]:
+for file in [REQ_FILE ,UPVOTE_FILE ]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump({}, f)
@@ -30,25 +28,6 @@ def get_admin_ids():
     """Get list of admin user IDs from environment"""
     admin_ids = os.getenv('ADMIN_IDS', '').split(',')
     return [int(id.strip()) for id in admin_ids if id.strip().isdigit()]
-
-def get_source_id():
-    return int(os.getenv("VID_CHANNEL_ID"))
-
-def get_target_id():
-    return int(os.getenv("ANO_ID"))
-
-def get_api_id_1():
-    return int(os.getenv("API_ID"))
-
-
-def get_api_hash_1():
-    return os.getenv("API_HASH")
-
-def get_session_string_1():
-    session = os.getenv("SESSION_STRING")
-    if not session:
-        raise ValueError("SESSION_STRING_1 not found in .env file")
-    return session
 
 def get_bot_token_2():
     token = os.getenv("BOT_TOKEN_1")
@@ -144,17 +123,3 @@ def save_upvotes(data: Dict[str, Any]) -> bool:
     except Exception as e:
         print(f"Error saving upvote data: {e}")
         return False
-
-def escape_markdown_v2(text: str) -> str:
-    """Escape special Markdown V2 characters while preserving blockquotes (>), spoilers (||), bold (*), and italic (_)"""
-    if not text:
-        return ""
-
-    # Characters to escape (excluding >, |, *, _)
-    escape_chars = r'[]()>~`#+-=|*_{}.!'
-    
-    # Escape each problematic character individually
-    for char in escape_chars:
-        text = text.replace(char, f'\\{char}')
-    
-    return text

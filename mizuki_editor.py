@@ -105,7 +105,6 @@ async def run_bot():
             if not load_mizuki_handlers(application):
                 logger.error("Failed to load one or more mizuki handlers")
                 return
-            
             # Original editor handlers
             admin_filter = filters.User(user_id=get_admin_ids())
             application.add_handler(
@@ -121,6 +120,7 @@ async def run_bot():
             logger.info("Starting bot application...")
             await application.initialize()
             await application.start()
+            
             await application.updater.start_polling()
             logger.info("Polling started successfully")
             

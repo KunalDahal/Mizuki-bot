@@ -1,11 +1,11 @@
 import asyncio
 from telegram.ext import Application
-from limit.config import get_bot_token_2
-from limit.start import get_start_handler
-from limit.upvote import get_upvote_handlers
-from limit.request import get_request_handler
-from limit.approve import get_approve_handler
-from limit.monitor import VideoMonitor
+from mizuki_editor.limit.config import get_bot_token_2
+from mizuki.start import get_start_handler
+from mizuki.upvote import get_upvote_handlers
+from mizuki.request import get_request_handler
+from mizuki.approve import get_approve_handler
+from mizuki_editor.limit.monitor import VideoMonitor
 import logging
 
 # Configure logging

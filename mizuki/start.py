@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from limit.config import load_users, save_users
+from mizuki.config import load_users, save_users
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command and store user ID"""
