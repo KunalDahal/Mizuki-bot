@@ -1,6 +1,7 @@
 import os
 from typing import List,Union,Dict,Any
 import json
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -143,3 +144,17 @@ def save_upvotes(data: Dict[str, Any]) -> bool:
     except Exception as e:
         print(f"Error saving upvote data: {e}")
         return False
+
+def escape_markdown_v2(text: str) -> str:
+    """Escape special Markdown V2 characters while preserving blockquotes (>), spoilers (||), bold (*), and italic (_)"""
+    if not text:
+        return ""
+
+    # Characters to escape (excluding >, |, *, _)
+    escape_chars = r'[]()>~`#+-=|*_{}.!'
+    
+    # Escape each problematic character individually
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    
+    return text

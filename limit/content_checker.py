@@ -1,4 +1,3 @@
-# content_checker.py
 import json
 import os
 from typing import Dict, Optional, Set

@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 from telegram.ext import Application
 from limit.config import get_bot_token_2
