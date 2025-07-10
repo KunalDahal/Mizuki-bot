@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from mizuki.admin import admin_only
+from mizuki_editor.commands.admin import admin_only
 
 @admin_only
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

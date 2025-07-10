@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import json
 import re
 import random
-from typing import List, Union
+from typing import List,Union,Dict,Any
+
 
 load_dotenv()
 import logging
@@ -15,15 +16,15 @@ MAX_VIDEO_SIZE = 150_000_000
 VIDEO_HASH_CHUNK_SIZE = 2_000_000  
 VIDEO_HASH_SAMPLE_SIZE = 20_000_000 
 
+
+
 JSON_FOLDER = "JSON"
 os.makedirs(JSON_FOLDER, exist_ok=True)
-
-TARGET_FILE = os.path.join(JSON_FOLDER, "ano_id.json")
-UPVOTE_FILE = os.path.join(JSON_FOLDER, "upvote.json")
-SYMBOL_FILE = os.path.join(JSON_FOLDER, "symbol.json")
-EMOJI_FILE = os.path.join(JSON_FOLDER, "emoji.json")
 REQ_FILE = os.path.join(JSON_FOLDER, "requests.json")
 USER_FILE = os.path.join(JSON_FOLDER, "users.json")
+TARGET_FILE = os.path.join(JSON_FOLDER, "ano_id.json")
+SYMBOL_FILE = os.path.join(JSON_FOLDER, "symbol.json")
+EMOJI_FILE = os.path.join(JSON_FOLDER, "emoji.json")
 REPLACE_FILE = os.path.join(JSON_FOLDER, "replace.json")
 REMOVE_FILE = os.path.join(JSON_FOLDER, "remove.json")
 SOURCE_FILE = os.path.join(JSON_FOLDER, "source_id.json")
@@ -37,7 +38,6 @@ for file in [
     BAN_FILE,
     SOURCE_FILE,
     REMOVE_FILE,
-    USER_FILE,
     TARGET_FILE,
     SYMBOL_FILE
 ]:
@@ -46,7 +46,7 @@ for file in [
             json.dump([], f)
 
 # ensure dict files
-for file in [REPLACE_FILE, HASH_FILE, REQ_FILE,RECOVERY_FILE,EMOJI_FILE,UPVOTE_FILE]:
+for file in [REPLACE_FILE, HASH_FILE,RECOVERY_FILE,EMOJI_FILE]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump({}, f)
@@ -56,6 +56,12 @@ def get_dump_channel_id() -> int:
     channel_id = os.getenv("DUMP_CHANNEL_ID")
     if not channel_id:
         raise ValueError("DUMP_CHANNEL_ID not found in .env file")
+    return int(channel_id)
+def get_vid_channel_id() -> int:
+    """Get dump channel ID from environment"""
+    channel_id = os.getenv("VID_CHANNEL_ID")
+    if not channel_id:
+        raise ValueError("VID_CHANNEL_ID not found in .env file")
     return int(channel_id)
 
 def get_target_channel() -> List[int]:
@@ -223,66 +229,6 @@ def save_channels(channel_list):
         json.dump(channel_list, f, indent=2)
 
 
-def load_users() -> List[str]:
-    try:
-
-        os.makedirs(JSON_FOLDER, exist_ok=True)
-
-        # Return empty list if file doesn't exist
-        if not os.path.exists(USER_FILE):
-            return []
-
-        # Load and validate existing data
-        with open(USER_FILE, "r") as f:
-            users = json.load(f)
-
-            # Ensure we always return a list of strings
-            if not isinstance(users, list):
-                raise ValueError("Invalid data format in user.json")
-
-            return [str(user_id) for user_id in users]
-
-    except (json.JSONDecodeError, ValueError) as e:
-        print(f"Error loading user data: {e}")
-        return []
-    except Exception as e:
-        print(f"Unexpected error loading users: {e}")
-        return []
-
-
-def save_users(user_ids: List[Union[str, int]]) -> bool:
-    try:
-        # Convert all IDs to strings and remove duplicates
-        unique_users = list({str(uid) for uid in user_ids})
-
-        # Create directory if it doesn't exist
-        os.makedirs(JSON_FOLDER, exist_ok=True)
-
-        # Write to file with pretty formatting
-        with open(USER_FILE, "w") as f:
-            json.dump(unique_users, f, indent=2, ensure_ascii=False)
-
-        return True
-    except Exception as e:
-        print(f"Error saving user data: {e}")
-        return False
-
-
-def add_user(user_id: Union[str, int]) -> bool:
-
-    try:
-        users = load_users()
-        user_str = str(user_id)
-
-        if user_str not in users:
-            users.append(user_str)
-            return save_users(users)
-        return True  # Already exists
-    except Exception as e:
-        print(f"Error adding user: {e}")
-        return False
-    
-
 def get_admin_ids():
     """Get list of admin user IDs from environment"""
     admin_ids = os.getenv('ADMIN_IDS', '').split(',')
@@ -323,3 +269,35 @@ def load_preserve_symbols() -> List[str]:
     except Exception as e:
         logger.error(f"Failed to load preserve symbols: {e}")
         return []
+    
+def get_admin_ids():
+    """Get list of admin user IDs from environment"""
+    admin_ids = os.getenv('ADMIN_IDS', '').split(',')
+    return [int(id.strip()) for id in admin_ids if id.strip().isdigit()]
+
+def get_source_id():
+    return int(os.getenv("API_ID"))
+
+def get_target_id():
+    return int(os.getenv("API_ID"))
+
+def get_api_id_1():
+    return int(os.getenv("API_ID"))
+
+
+def get_api_hash_1():
+    return os.getenv("API_HASH")
+
+def get_session_string_1():
+    session = os.getenv("SESSION_STRING")
+    if not session:
+        raise ValueError("SESSION_STRING not found in .env file")
+    return session
+
+def get_bot_token_2():
+    token = os.getenv("BOT_TOKEN_2")
+    if not token:
+        raise ValueError("BOT_TOKEN not found in .env file")
+    return token
+
+

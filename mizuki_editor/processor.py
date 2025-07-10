@@ -3,7 +3,6 @@ from typing import List, Dict, Optional, Union
 from telegram import Message
 from mizuki_editor.editor import Editor
 from util import get_admin_ids
-import imagehash
 from mizuki_editor.hash import _generate_media_hashes, _add_to_hash_data
 
 logger = logging.getLogger(__name__)
