@@ -33,7 +33,6 @@ BAN_FILE = os.path.join(JSON_FOLDER, "banned.json")
 RECOVERY_FILE = os.path.join(JSON_FOLDER, "last_message_id.json")
 MAX_HASH_ENTRIES = 1000
 
-# ensure list files
 for file in [
     BAN_FILE,
     SOURCE_FILE,
@@ -45,20 +44,18 @@ for file in [
         with open(file, "w") as f:
             json.dump([], f)
 
-# ensure dict files
 for file in [REPLACE_FILE, HASH_FILE,RECOVERY_FILE,EMOJI_FILE]:
     if not os.path.exists(file):
         with open(file, "w") as f:
             json.dump({}, f)
 
 def get_dump_channel_id() -> int:
-    """Get dump channel ID from environment"""
     channel_id = os.getenv("DUMP_CHANNEL_ID")
     if not channel_id:
         raise ValueError("DUMP_CHANNEL_ID not found in .env file")
     return int(channel_id)
 def get_vid_channel_id() -> int:
-    """Get dump channel ID from environment"""
+
     channel_id = os.getenv("VID_CHANNEL_ID")
     if not channel_id:
         raise ValueError("VID_CHANNEL_ID not found in .env file")
@@ -74,7 +71,7 @@ def get_target_channel() -> List[int]:
     if not channels:
         raise ValueError("No target channel configured (empty list).")
     
-    return [int(channel) for channel in channels]  # Return all channels as integers
+    return [int(channel) for channel in channels]  
 
 def add_target_channel(channel_id: int):
     """Add new forward target"""
@@ -92,13 +89,10 @@ def remove_target_channel(channel_id: int):
         with open(TARGET_FILE, 'w') as f:
             json.dump(channels, f)
             
-# Load banned words
 def load_banned_words():
     with open(BAN_FILE, "r") as f:
         return json.load(f)
 
-
-# Save banned words
 def save_banned_words(words):
     with open(BAN_FILE, "w") as f:
         json.dump(words, f)
@@ -106,28 +100,22 @@ def save_banned_words(words):
 
 def load_remove_words() -> List[str]:
     try:
-        # Create directory if it doesn't exist
         os.makedirs(JSON_FOLDER, exist_ok=True)
 
-        # Return empty list if file doesn't exist
         if not os.path.exists(REMOVE_FILE):
             return []
 
-        # Load and return words from file
         with open(REMOVE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-            # Support both array format and object with 'words' key
             if isinstance(data, list):
                 return data
             return data.get("words", [])
 
     except json.JSONDecodeError:
-        # Handle corrupt JSON file
         print(f"Warning: {REMOVE_FILE} contains invalid JSON")
         return []
     except Exception as e:
-        # Log other errors and return empty list
         print(f"Error loading {REMOVE_FILE}: {e}")
         return []
 
@@ -239,13 +227,10 @@ def escape_markdown_v2(text: str) -> str:
     if not text:
         return ""
     
-    # List of special characters that need to be escaped in MarkdownV2
     escape_chars = r'_*[]()~`>#+-=|{}.!'
     
-    # Create a regex pattern that matches any of the special characters
     pattern = f'([{"".join(re.escape(c) for c in escape_chars)}])'
     
-    # Replace each special character with its escaped version
     return re.sub(pattern, r'\\\1', text)
 
 def load_emoji_replacements():

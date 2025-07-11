@@ -15,14 +15,12 @@ from mizuki.upvote import get_upvote_handlers
 from mizuki.request import get_request_handler
 from mizuki.approve import get_approve_handler
 
-# Import all command handlers from mizuki
 from mizuki_editor.commands import (
     banned, channel, help, list, maintainence,
     remove, replace,  
     replace_emoji, symbol, start
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -43,39 +41,30 @@ class BotRunner:
         try:
             logger.info("Loading mizuki command handlers...")
             
-            # Start and help commands
             application.add_handler(start.get_start_handler())
             application.add_handler(help.get_help_handler())
             
-            # Banned words handlers
             for handler in banned.get_banned_handlers():
                 application.add_handler(handler)
             
-            # Channel handlers
             application.add_handler(channel.get_add_channel_handler())
             application.add_handler(channel.get_remove_channel_handler())
             
-            # List handlers
             for handler in list.get_list_handlers():
                 application.add_handler(handler)
             
-            # Maintenance handlers
             for handler in maintainence.get_maintenance_handlers():
                 application.add_handler(handler)
             
-            # Remove word handlers
             application.add_handler(remove.get_add_remove_word_handler())
             application.add_handler(remove.get_remove_remove_word_handler())
             
-            # Replace word handlers
             for handler in replace.get_rep_handlers():
                 application.add_handler(handler)
                 
-            # Emoji replacement handlers
             for handler in replace_emoji.get_handlers():
                 application.add_handler(handler)
                 
-            # Symbol handlers
             for handler in symbol.get_handlers():
                 application.add_handler(handler)
                 
@@ -113,12 +102,10 @@ class BotRunner:
                 monitor = ChannelMonitor()
                 monitor_task = asyncio.create_task(monitor.run())
                 
-                # Load all mizuki command handlers
                 if not self.load_mizuki_handlers(application):
                     logger.error("Failed to load one or more mizuki handlers")
                     return
                 
-                # Original editor handlers
                 admin_filter = filters.User(user_id=get_admin_ids())
                 application.add_handler(
                     MessageHandler(
@@ -201,13 +188,11 @@ class BotRunner:
             try:
                 application = Application.builder().token(get_bot_token()).build()
                 
-                # Add handlers
                 application.add_handler(get_start_handler())
                 application.add_handlers(get_upvote_handlers())
                 application.add_handler(get_request_handler())
                 application.add_handler(get_approve_handler())
                 
-                # Start the bot
                 await application.initialize()
                 await application.start()
                 logger.info("SES bot started...")
@@ -282,7 +267,6 @@ def main():
     bot_runner = BotRunner()
     
     try:
-        # Create and start threads for each process
         threads = [
             threading.Thread(target=bot_runner.start_mizuki_bot, name="MizukiBot"),
             threading.Thread(target=bot_runner.start_ses_bot, name="SESBot"),
@@ -294,7 +278,6 @@ def main():
             thread.daemon = True
             thread.start()
         
-        # Wait for all threads to complete (they won't unless interrupted)
         for thread in threads:
             thread.join()
             
